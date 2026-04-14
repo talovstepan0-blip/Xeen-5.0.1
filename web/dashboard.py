@@ -726,6 +726,74 @@ async def api_get_currency():
 
 
 # ══════════════════════════════════════════════════════════════════
+# ПЛАНИРОВЩИК НАПОМИНАНИЙ (Scheduler)
+# ══════════════════════════════════════════════════════════════════
+
+_scheduler_enabled = True
+_scheduler_instance = None
+
+def get_scheduler():
+    """Получить экземпляр планировщика"""
+    global _scheduler_instance
+    if _scheduler_instance is None:
+        try:
+            from plugins.core.scheduler import SchedulerPlugin
+            _scheduler_instance = SchedulerPlugin()
+        except Exception as e:
+            logger.warning(f"Scheduler init error: {e}")
+    return _scheduler_instance
+
+@router.get("/api/scheduler/status")
+async def api_scheduler_status():
+    """Статус планировщика напоминаний"""
+    return {
+        'enabled': _scheduler_enabled,
+        'running': _scheduler_instance is not None,
+    }
+
+@router.post("/api/scheduler/enable")
+async def api_scheduler_enable():
+    """Включить планировщик напоминаний"""
+    global _scheduler_enabled
+    _scheduler_enabled = True
+    scheduler = get_scheduler()
+    if scheduler:
+        try:
+            scheduler.start(callback=lambda r: logger.info(f"Reminder: {r.get('text')}"))
+            return {'status': 'enabled', 'message': 'Планировщик включён'}
+        except Exception as e:
+            logger.error(f"Scheduler start error: {e}")
+            raise HTTPException(500, f"Ошибка запуска: {e}")
+    return {'status': 'enabled', 'message': 'Флаг установлен, плагин недоступен'}
+
+@router.post("/api/scheduler/disable")
+async def api_scheduler_disable():
+    """Выключить планировщик напоминаний"""
+    global _scheduler_enabled
+    _scheduler_enabled = False
+    scheduler = get_scheduler()
+    if scheduler:
+        try:
+            scheduler.stop()
+            return {'status': 'disabled', 'message': 'Планировщик остановлен'}
+        except Exception as e:
+            logger.error(f"Scheduler stop error: {e}")
+    return {'status': 'disabled', 'message': 'Флаг снят'}
+
+@router.get("/api/scheduler/list")
+async def api_scheduler_list():
+    """Список активных напоминаний"""
+    scheduler = get_scheduler()
+    if scheduler:
+        try:
+            reminders = scheduler.list_all()
+            return {'reminders': reminders}
+        except Exception as e:
+            logger.error(f"Scheduler list error: {e}")
+    return {'reminders': []}
+
+
+# ══════════════════════════════════════════════════════════════════
 # Инициализация
 # ══════════════════════════════════════════════════════════════════
 
