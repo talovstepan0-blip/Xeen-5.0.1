@@ -345,7 +345,10 @@ function showNotification(title, message) {
 
   // Web Push (если разрешено)
   if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(title, { body: message, icon: '/static/icon-192.png' });
+    const iconUrl = (location.protocol === 'file:' || !location.host) 
+      ? 'http://localhost:8000/static/icon-192.png' 
+      : '/static/icon-192.png';
+    new Notification(title, { body: message, icon: iconUrl });
   }
 }
 

@@ -293,7 +293,10 @@ async def learning_suggest(request: Request):
 async def learning_learn(request: Request):
     try:
         from core import learning as _l
-        data = await request.json()
+        try:
+            data = await request.json()
+        except Exception as json_err:
+            raise HTTPException(400, f"Некорректный JSON: {json_err}")
         phrase = data.get("phrase")
         action_type = data.get("action_type")
         action_data = data.get("action_data") or {}
@@ -304,6 +307,7 @@ async def learning_learn(request: Request):
     except HTTPException:
         raise
     except Exception as e:
+        logger.exception(f"Learning error: {e}")
         raise HTTPException(500, str(e))
 
 
