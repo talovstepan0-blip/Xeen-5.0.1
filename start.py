@@ -29,6 +29,7 @@ import sys
 import threading
 import time
 import urllib.request
+import webbrowser
 from pathlib import Path
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -207,6 +208,17 @@ def main():
     print(f"\n  Запуск {len(services)} сервисов...\n")
     for name, cmd in services:
         processes.append(start_svc(name, cmd))
+
+    # Открываем HUD в браузере через 2 секунды после старта сервисов
+    def open_hud():
+        time.sleep(2)
+        hud_path = os.path.join(ROOT, "hud", "index.html")
+        if os.path.exists(hud_path):
+            webbrowser.open(f"file://{hud_path}")
+        else:
+            webbrowser.open("http://localhost:8000/hud/")
+    
+    threading.Thread(target=open_hud, daemon=True).start()
 
     print()
     print("=" * 60)

@@ -35,6 +35,7 @@ DB_PATH = DATA_DIR / "kun_ext.db"
 
 OLLAMA_URL = "http://localhost:11434"
 OLLAMA_MODEL = "llama3.2:3b"
+QWEN_MODEL = "qwen2.5:7b"
 
 router = APIRouter(prefix="/professor", tags=["kun-ext"])
 
