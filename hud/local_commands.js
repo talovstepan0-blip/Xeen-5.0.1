@@ -212,6 +212,20 @@ const LocalCommandsMatcher = (() => {
       confidence: 0.88,
     },
 
+    // ── Информация ────────────────────────────────────────────────────────────
+    {
+      cmd: 'get_weather',
+      regex: /(?:погода|прогноз погоды|какая погода|погода на |weather)/i,
+      extract: () => ({}),
+      confidence: 0.92,
+    },
+    {
+      cmd: 'get_currency',
+      regex: /(?:курс валют|курс доллара|курс евро|доллар|евро|usd|eur|rub|гривна|UAH|конвертация валют)/i,
+      extract: () => ({}),
+      confidence: 0.92,
+    },
+
     // ── Системные ────────────────────────────────────────────────────────────
     { cmd: 'sien_help',    regex: /^(?:помощь|помоги|справка|help|что умеешь|команды|список команд)$/i, extract: () => ({}), confidence: 0.90 },
     { cmd: 'sien_version', regex: /^(?:версия|version|ver|какая версия|сиен версия)$/i,                extract: () => ({}), confidence: 0.92 },
@@ -353,6 +367,13 @@ const LocalCommandsExecutor = (() => {
 
       case 'task_delete':
         return await deleteTask(params.task_id);
+
+      // ── Информация ───────────────────────────────────────────────────────────
+      case 'get_weather':
+        return await getWeather();
+
+      case 'get_currency':
+        return await getCurrency();
 
       // ── Системные Сиен ───────────────────────────────────────────────────────
       case 'sien_help':
@@ -575,6 +596,127 @@ const LocalCommandsExecutor = (() => {
     } catch {
       return '❌ Интернет недоступен';
     }
+  }
+
+  // ── Информация ───────────────────────────────────────────────────────────────
+
+  async function getWeather() {
+    try {
+      // Попытка получить погоду через API дашборда (если есть прокси)
+      const r = await fetchWithTimeout(`${LC_CONFIG.apiBase}/dashboard/api/weather`, {}, 5000);
+      if (r.ok) {
+        const data = await r.json();
+        return formatWeatherResponse(data);
+      }
+    } catch {}
+    
+    // Fallback — прямые запросы к публичным API
+    try {
+      // Open-Meteo (бесплатный, без ключа)
+      const geoRes = await fetchWithTimeout('https://geocoding-api.open-meteo.com/v1/search?name=Moscow&count=1&language=ru&format=json', {}, 3000);
+      let lat = 55.7558, lon = 37.6173; // Москва по умолчанию
+      if (geoRes.ok) {
+        const geo = await geoRes.json();
+        if (geo.results && geo.results[0]) {
+          lat = geo.results[0].latitude;
+          lon = geo.results[0].longitude;
+        }
+      }
+      
+      const weatherRes = await fetchWithTimeout(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&windspeed_unit=ms`,
+        {}, 5000
+      );
+      if (weatherRes.ok) {
+        const w = await weatherRes.json();
+        const cw = w.current_weather;
+        const icons = {
+          0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+          45: '🌫️', 48: '🌫️',
+          51: '🌦️', 53: '🌧️', 55: '🌧️', 56: '🌨️', 57: '🌨️',
+          61: '🌧️', 63: '🌧️', 65: '🌧️', 66: '❄️', 67: '❄️',
+          71: '❄️', 73: '❄️', 75: '❄️', 77: '❄️',
+          80: '🌦️', 81: '🌧️', 82: '⛈️',
+          95: '⛈️', 96: '⛈️', 99: '⛈️'
+        };
+        const icon = icons[cw.weathercode] || '🌡️';
+        return `${icon} Температура: ${cw.temperature}°C\n💨 Ветер: ${cw.windspeed} м/с\n🧭 Направление: ${cw.winddirection}°`;
+      }
+    } catch (e) {
+      console.warn('[Weather] Open-Meteo failed:', e);
+    }
+    
+    return '🌐 Открываю Яндекс.Погоду... https://yandex.ru/pogoda';
+  }
+
+  function formatWeatherResponse(data) {
+    if (!data) return '❌ Нет данных о погоде';
+    const temp = data.temperature ?? data.temp ?? data.current?.temperature;
+    const feelsLike = data.feels_like ?? data.current?.feels_like;
+    const humidity = data.humidity ?? data.current?.humidity;
+    const wind = data.wind_speed ?? data.current?.wind_speed;
+    const desc = data.description ?? data.condition ?? '';
+    
+    let result = `🌡️ Температура: ${temp}°C`;
+    if (feelsLike !== undefined) result += `\n🔹 Ощущается: ${feelsLike}°C`;
+    if (humidity !== undefined) result += `\n💧 Влажность: ${humidity}%`;
+    if (wind !== undefined) result += `\n💨 Ветер: ${wind} м/с`;
+    if (desc) result += `\n${desc}`;
+    return result;
+  }
+
+  async function getCurrency() {
+    try {
+      // Попытка получить курс через API дашборда
+      const r = await fetchWithTimeout(`${LC_CONFIG.apiBase}/dashboard/api/currency`, {}, 5000);
+      if (r.ok) {
+        const data = await r.json();
+        return formatCurrencyResponse(data);
+      }
+    } catch {}
+    
+    // Fallback — публичные API
+    try {
+      // ЦБ РФ (официальный курс)
+      const cbRes = await fetchWithTimeout('https://www.cbr-xml-daily.ru/daily_json.js', {}, 5000);
+      if (cbRes.ok) {
+        const cb = await cbRes.json();
+        const usd = cb.Valute?.USD;
+        const eur = cb.Valute?.EUR;
+        
+        let result = '💱 Курс валют (ЦБ РФ):\\n';
+        if (usd) {
+          result += `🇺🇸 USD: ${usd.Value.toFixed(2)} ₽ (${usd.Name})\\n`;
+        }
+        if (eur) {
+          result += `🇪🇺 EUR: ${eur.Value.toFixed(2)} ₽ (${eur.Name})`;
+        }
+        return result.replace(/\\\\n/g, '\\n');
+      }
+    } catch (e) {
+      console.warn('[Currency] CB RF failed:', e);
+    }
+    
+    try {
+      // Альтернатива — Binance API (крипто + фиат)
+      const binanceRes = await fetchWithTimeout('https://api.binance.com/api/v3/ticker/price?symbol=USDTUSDC', {}, 3000);
+      if (binanceRes.ok) {
+        return '💱 Курсы доступны на Binance: https://www.binance.com/ru/markets';
+      }
+    } catch {}
+    
+    return '💱 Текущие курсы: https://www.cbr.ru/currency_base/daily/';
+  }
+
+  function formatCurrencyResponse(data) {
+    if (!data) return '❌ Нет данных о курсах';
+    let result = '💱 Курсы валют:\\n';
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === 'number') {
+        result += `${key.toUpperCase()}: ${value.toFixed(2)} ₽\\n`;
+      }
+    }
+    return result.replace(/\\\\n/g, '\\n').trim();
   }
 
   // ── Задачи ───────────────────────────────────────────────────────────────────

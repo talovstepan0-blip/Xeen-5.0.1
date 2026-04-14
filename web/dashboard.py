@@ -650,6 +650,82 @@ async def api_run_command(request: Request):
 
 
 # ══════════════════════════════════════════════════════════════════
+# Погода и курсы валют
+# ══════════════════════════════════════════════════════════════════
+
+@router.get("/api/weather")
+async def api_get_weather():
+    """Получить текущую погоду (через Open-Meteo)"""
+    import httpx
+    
+    try:
+        # Координаты по умолчанию (Москва)
+        lat, lon = 55.7558, 37.6173
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Геокодирование (опционально, можно определить по IP)
+            # geo_r = await client.get('https://geocoding-api.open-meteo.com/v1/search?name=Moscow&count=1&language=ru&format=json')
+            # if geo_r.status_code == 200:
+            #     geo = geo_r.json()
+            #     if geo.get('results'):
+            #         lat = geo['results'][0]['latitude']
+            #         lon = geo['results'][0]['longitude']
+            
+            # Прогноз погоды
+            weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&windspeed_unit=ms"
+            r = await client.get(weather_url)
+            r.raise_for_status()
+            data = r.json()
+            
+            cw = data.get('current_weather', {})
+            result = {
+                'temperature': cw.get('temperature'),
+                'windspeed': cw.get('windspeed'),
+                'winddirection': cw.get('winddirection'),
+                'weathercode': cw.get('weathercode'),
+                'time': cw.get('time'),
+                'location': {'lat': lat, 'lon': lon, 'name': 'Москва'},
+            }
+            return result
+    except Exception as e:
+        logger.warning(f"Weather API error: {e}")
+        raise HTTPException(500, f"Не удалось получить погоду: {e}")
+
+
+@router.get("/api/currency")
+async def api_get_currency():
+    """Получить курсы валют (ЦБ РФ)"""
+    import httpx
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get('https://www.cbr-xml-daily.ru/daily_json.js')
+            r.raise_for_status()
+            data = r.json()
+            
+            valute = data.get('Valute', {})
+            result = {}
+            
+            for code in ['USD', 'EUR', 'CNY', 'GBP', 'UAH']:
+                if code in valute:
+                    v = valute[code]
+                    result[code.lower()] = {
+                        'value': v.get('Value'),
+                        'nominal': v.get('Nominal'),
+                        'name': v.get('Name'),
+                        'char_code': v.get('CharCode'),
+                    }
+            
+            return {
+                'date': data.get('Date'),
+                'rates': result,
+            }
+    except Exception as e:
+        logger.warning(f"Currency API error: {e}")
+        raise HTTPException(500, f"Не удалось получить курсы: {e}")
+
+
+# ══════════════════════════════════════════════════════════════════
 # Инициализация
 # ══════════════════════════════════════════════════════════════════
 
