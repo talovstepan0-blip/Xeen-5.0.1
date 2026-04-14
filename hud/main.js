@@ -321,6 +321,28 @@ function sendCommand(text) {
   if (!text.trim()) return;
   window._lastQuery = text;
   logLine(text, { cls: 'log-system', tag: '[YOU]' });
+  
+  // Проверяем локальные команды сначала
+  if (typeof LocalCommandsMatcher !== 'undefined' && typeof LocalCommandsExecutor !== 'undefined') {
+    const match = LocalCommandsMatcher.match(text);
+    if (match && match.confidence >= 0.5) {
+      // Локальная команда найдена — выполняем без отправки на сервер
+      LocalCommandsExecutor.execute(match, text).then(result => {
+        if (result) {
+          logLine(result, { cls: 'log-success', tag: '[СИЕН]' });
+        }
+      }).catch(err => {
+        console.error('[LocalCmd] Error:', err);
+        // Fallback: отправляем на сервер если ошибка
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'command', text, session_id: SESSION_ID }));
+        }
+      });
+      return;
+    }
+  }
+  
+  // Не локальная команда — отправляем через WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({
       type: 'command',
