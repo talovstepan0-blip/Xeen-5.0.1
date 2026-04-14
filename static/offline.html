@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сиен — Офлайн</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #050a0f;
+    color: #d4e2f0;
+    font-family: 'Orbitron', monospace, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+  }
+  .card {
+    border: 1px solid rgba(0, 245, 255, 0.3);
+    background: #090d14;
+    border-radius: 6px;
+    padding: 40px 28px;
+    max-width: 480px;
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.1);
+  }
+  h1 {
+    color: #00f5ff;
+    font-size: 22px;
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+    text-shadow: 0 0 12px rgba(0, 245, 255, 0.5);
+  }
+  p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #a5b5c5;
+    margin-bottom: 12px;
+    word-break: break-word;
+  }
+  .icon {
+    font-size: 48px;
+    margin-bottom: 18px;
+  }
+  button {
+    background: transparent;
+    border: 1px solid #00b8c8;
+    color: #00f5ff;
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 10px 24px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-top: 20px;
+    transition: all 0.2s;
+  }
+  button:hover {
+    background: rgba(0, 245, 255, 0.08);
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.3);
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📡</div>
+    <h1>СИЕН ОФЛАЙН</h1>
+    <p>Нет связи с оркестратором.</p>
+    <p>Локальные команды HUD продолжают работать. Часть функций требует онлайна.</p>
+    <button onclick="location.reload()">↻ ПОПРОБОВАТЬ СНОВА</button>
+  </div>
+</body>
+</html>
