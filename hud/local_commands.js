@@ -225,6 +225,12 @@ const LocalCommandsMatcher = (() => {
       extract: () => ({}),
       confidence: 0.92,
     },
+    {
+      cmd: 'greeting',
+      regex: /(?:привет|здравствуй|hello|hi|добрый день|доброе утро|добрый вечер)/i,
+      extract: () => ({}),
+      confidence: 0.95,
+    },
 
     // ── Системные ────────────────────────────────────────────────────────────
     { cmd: 'sien_help',    regex: /^(?:помощь|помоги|справка|help|что умеешь|команды|список команд)$/i, extract: () => ({}), confidence: 0.90 },
@@ -374,6 +380,9 @@ const LocalCommandsExecutor = (() => {
 
       case 'get_currency':
         return await getCurrency();
+
+      case 'greeting':
+        return '👋 Привет! Я Сиен, ваш персональный ассистент. Чем могу помочь?';
 
       // ── Системные Сиен ───────────────────────────────────────────────────────
       case 'sien_help':
