@@ -1,0 +1,141 @@
+# ═══════════════════════════════════════════════════════════════════
+# Сиен 3.0.0 — requirements.txt
+# ═══════════════════════════════════════════════════════════════════
+#
+# БЫСТРАЯ УСТАНОВКА (ядро):
+#   pip install -r requirements.txt
+#
+# ПОЛНАЯ УСТАНОВКА (все агенты со всеми возможностями):
+#   раскомментируй нужные блоки ниже
+#
+# WINDOWS — одна команда без опциональных:
+#   pip install fastapi "uvicorn[standard]" httpx pydantic aiohttp aiosqlite ^
+#       websockets cryptography python-multipart pyyaml python-Levenshtein ^
+#       psutil pyotp qrcode[pil] Pillow
+# ═══════════════════════════════════════════════════════════════════
+
+# ── ЯДРО — обязательно ────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+httpx>=0.27.0
+pydantic>=2.0.0
+aiohttp>=3.9.0
+aiosqlite>=0.20.0
+websockets>=12.0
+cryptography>=42.0.0          # Кронос + core/encryption (AES-256-GCM)
+python-multipart>=0.0.9       # Загрузка файлов в FastAPI
+pyyaml>=6.0.1
+python-Levenshtein>=0.23      # Нечёткое совпадение локальных команд
+Pillow>=10.0.0                # Иконки PWA, обработка изображений
+
+# ── НОВОЕ В 3.0.0 ─────────────────────────────────────────────────
+
+# Мониторинг ресурсов (web/dashboard.py /api/system/stats)
+psutil>=5.9.0
+# pynvml>=11.5.0              # GPU stats (только для NVIDIA)
+
+# Двухфакторная аутентификация (web/dashboard.py /api/2fa)
+pyotp>=2.9.0
+qrcode[pil]>=7.4.2
+
+# LLM-кэш (используется core/llm_cache.py — на чистом sqlite, без redis)
+# Опциональная альтернатива для мульти-инстанс:
+# redis>=5.0.0
+
+# ── АГЕНТ ВЭНЬ (расширенный, agents/wen_email.py) ─────────────────
+
+# Google Calendar (sync через OAuth)
+# google-api-python-client>=2.100.0
+# google-auth-httplib2>=0.2.0
+# google-auth-oauthlib>=1.2.0
+
+# Яндекс.Календарь через CalDAV
+# caldav>=1.3.0
+
+# IMAP/SMTP — встроены в Python (imaplib, smtplib, email)
+
+# ── АГЕНТ ГЕРМЕС (Affiliate, agents/hermes.py) ────────────────────
+
+# Парсинг трендов из Telegram (юзербот)
+# telethon>=1.34.0
+
+# Парсинг трендов из ВКонтакте
+# vk_api>=11.9.9
+
+# Самообучение модели конверсии
+# scikit-learn>=1.4.0
+# numpy>=1.26.0
+
+# ── АГЕНТ АПОЛЛОН (Видеомейкер, agents/apollo.py) ─────────────────
+
+# Whisper для субтитров (модель tiny — ~75MB)
+# openai-whisper>=20231117
+
+# Видеомонтаж
+# moviepy>=1.0.3
+# Pillow>=10.0.0  (уже в ядре)
+
+# Piper TTS (нужна установка отдельно: https://github.com/rhasspy/piper)
+# Скачать модели: ru_RU-ruslan-medium, ru_RU-irina-medium, ru_RU-dmitri-medium
+
+# pyttsx3 как fallback TTS
+# pyttsx3>=2.90
+
+# ── АГЕНТ МАСТЕР (Тренер, agents/master_ext.py) ──────────────────
+
+# CSV парсинг — встроено (csv модуль)
+# Импорт Mi Band/Garmin — обычные CSV без доп. зависимостей
+
+# Опционально: stravalib для прямой интеграции со Strava
+# stravalib>=1.5.0
+
+# ── АГЕНТ ПЛУТОС (Инвестиции, agents/plutos_ext.py) ──────────────
+
+# Тинькофф Инвестиции (реальная торговля!)
+# tinkoff-investments>=0.2.0b96
+
+# Binance Spot
+# binance-connector>=3.6.0
+
+# Альтернатива: yfinance (только котировки, без торговли)
+# yfinance>=0.2.40
+
+# ── АГЕНТ КУН (Профессор, agents/kun_ext.py) ─────────────────────
+
+# RAG по документам
+# sentence-transformers>=2.7.0
+# chromadb>=0.5.0
+# pypdf>=4.0.0
+# python-docx>=1.1.0
+
+# ── АГЕНТ МНЕМОН (Переводчик, agents/mnemon.py) ──────────────────
+
+# Helsinki-NLP офлайн перевод
+# transformers>=4.40.0
+# sentencepiece>=0.2.0
+# torch>=2.2.0
+
+# ── АГЕНТЫ HUEI / MENG (GPU генерация) ────────────────────────────
+
+# diffusers>=0.27.0
+# transformers>=4.40.0
+# accelerate>=0.29.0
+# torch>=2.2.0  --index-url https://download.pytorch.org/whl/cu118
+
+# ── АГЕНТ АВТО (Макросы) ──────────────────────────────────────────
+
+# pynput>=1.7.6                # требует графическое окружение
+
+# ── АГЕНТ АХИЛЛ (VPS / SOCKS5 — опционально) ──────────────────────
+
+# PySocks>=1.7.1
+
+# ── ГОЛОСОВОЕ РАСПОЗНАВАНИЕ (опционально) ─────────────────────────
+
+# Vosk оффлайн ASR
+# vosk>=0.3.45
+# Скачать: https://alphacephei.com/vosk/models/vosk-model-small-ru-0.22.zip
+
+# ── TELEGRAM (агент Ирида) ────────────────────────────────────────
+
+# python-telegram-bot>=21.0
