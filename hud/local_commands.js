@@ -231,6 +231,12 @@ const LocalCommandsMatcher = (() => {
       extract: () => ({}),
       confidence: 0.95,
     },
+    {
+      cmd: 'toggle_reminders',
+      regex: /(?:вкл|выкл|enable|disable|toggle).*(?:напоминани|reminder)|(?:напоминани|reminder).*(?:вкл|выкл|enable|disable)/i,
+      extract: () => ({}),
+      confidence: 0.90,
+    },
 
     // ── Системные ────────────────────────────────────────────────────────────
     { cmd: 'sien_help',    regex: /^(?:помощь|помоги|справка|help|что умеешь|команды|список команд)$/i, extract: () => ({}), confidence: 0.90 },
@@ -383,6 +389,9 @@ const LocalCommandsExecutor = (() => {
 
       case 'greeting':
         return '👋 Привет! Я Сиен, ваш персональный ассистент. Чем могу помочь?';
+
+      case 'toggle_reminders':
+        return await toggleReminders();
 
       // ── Системные Сиен ───────────────────────────────────────────────────────
       case 'sien_help':
@@ -715,6 +724,30 @@ const LocalCommandsExecutor = (() => {
     } catch {}
     
     return '💱 Текущие курсы: https://www.cbr.ru/currency_base/daily/';
+  }
+
+  async function toggleReminders() {
+    try {
+      const r = await fetchWithTimeout(`${LC_CONFIG.apiBase}/dashboard/api/scheduler/status`, {}, 3000);
+      if (r.ok) {
+        const data = await r.json();
+        const isEnabled = data.enabled;
+        const newStatus = !isEnabled;
+        const actionR = await fetchWithTimeout(
+          `${LC_CONFIG.apiBase}/dashboard/api/scheduler/${newStatus ? 'enable' : 'disable'}`,
+          { method: 'POST' },
+          3000
+        );
+        if (actionR.ok) {
+          return newStatus
+            ? '✅ Напоминания включены. Планировщик активен.'
+            : '⏸ Напоминания выключены. Планировщик остановлен.';
+        }
+      }
+    } catch (e) {
+      console.warn('[Scheduler] API error:', e);
+    }
+    return '⚙️ Управление напоминаниями доступно в веб-дашборде';
   }
 
   function formatCurrencyResponse(data) {
