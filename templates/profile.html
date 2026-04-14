@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Личный кабинет — Сиен 2.0</title>
+  <style>
+    /* ── Переменные темы ── */
+    :root {
+      --bg:          #0a0e1a;
+      --bg2:         #0f1525;
+      --panel:       #111827;
+      --border:      #1e2d45;
+      --accent:      #00d4ff;
+      --accent2:     #7c3aed;
+      --accent3:     #10b981;
+      --text:        #e2e8f0;
+      --text-muted:  #64748b;
+      --danger:      #ef4444;
+      --warn:        #f59e0b;
+      --radius:      10px;
+      --font:        'Courier New', monospace;
+    }
+
+    /* ── Сиен 3.0 patch: универсальный box-sizing и word-wrap ── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+    /* min-width: 0 для всех flex-потомков */
+    .panel > *, .card > *, .row > *, .col > * {
+      min-width: 0;
+    }
+    /* Базовый размер шрифта поднят до 14px */
+    body { font-size: 14px; line-height: 1.55; }
+    /* Длинные тексты в карточках, истории, списках */
+    .history-item, .card, .row, .item, td, .text-content {
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    /* Таблицы — горизонтальный скролл на узких экранах */
+    @media (max-width: 700px) {
+      table { display: block; overflow-x: auto; white-space: nowrap; }
+    }
+    @media (min-width: 701px) {
+      table { display: table; white-space: normal; }
+      table td, table th { word-break: break-word; }
+    }
+
+    [data-theme="dark"] {
+      --bg: #0d0d0d; --bg2: #141414; --panel: #1a1a1a;
+      --border: #2a2a2a; --accent: #60a5fa; --text: #f1f5f9;
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc; --bg2: #f1f5f9; --panel: #ffffff;
+      --border: #e2e8f0; --accent: #2563eb; --text: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+    }
+
+    /* ── Топбар ── */
+    .topbar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .topbar-logo {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--accent);
+      text-shadow: 0 0 10px var(--accent);
+      letter-spacing: 2px;
+    }
+    .topbar-nav { display: flex; gap: 8px; margin-left: auto; }
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: all .2s;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: rgba(0,212,255,.1);
+      color: var(--accent);
+    }
+
+    /* ── Основная сетка ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 24px;
+    }
+
+    /* ── Панели ── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .panel-body { padding: 20px; }
+
+    /* ── Аватар-блок ── */
+    .avatar-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .avatar-wrap {
+      position: relative;
+      cursor: pointer;
+    }
+    .avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      object-fit: cover;
+      background: var(--bg2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      overflow: hidden;
+    }
+    .avatar-edit {
+      position: absolute;
+      bottom: 2px; right: 2px;
+      background: var(--accent);
+      color: #000;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+    .username-display {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--text);
+    }
+    .user-badge {
+      font-size: 0.7rem;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: rgba(0,212,255,.1);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    /* ── Sidebar-меню ── */
+    .sidebar-menu { padding: 8px; }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: all .2s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .sidebar-item:hover { background: rgba(255,255,255,.05); color: var(--text); }
+    .sidebar-item.active { background: rgba(0,212,255,.1); color: var(--accent); }
+    .sidebar-item .ico { font-size: 1rem; width: 20px; text-align: center; }
+
+    /* ── Основной контент ── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Форма ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, select, textarea {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0,212,255,.1);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ── Кнопки ── */
+    .btn {
+      padding: 9px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary { background: var(--accent); color: #000; font-weight: bold; }
+    .btn-primary:hover { background: #00b8d9; box-shadow: 0 0 15px rgba(0,212,255,.3); }
+    .btn-secondary { background: var(--bg2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
+
+    /* ── Тема HUD ── */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .theme-card {
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      cursor: pointer;
+      text-align: center;
+      transition: all .2s;
+    }
+    .theme-card:hover { border-color: var(--accent); }
+    .theme-card.selected { border-color: var(--accent); background: rgba(0,212,255,.05); }
+    .theme-preview {
+      width: 100%; height: 50px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .theme-cyberpunk { background: linear-gradient(135deg, #0a0e1a, #00d4ff22); }
+    .theme-dark      { background: linear-gradient(135deg, #0d0d0d, #60a5fa22); }
+    .theme-light     { background: linear-gradient(135deg, #f8fafc, #2563eb33); }
+    .theme-name { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* ── Быстрые команды ── */
+    .favorites-list { display: flex; flex-direction: column; gap: 8px; }
+    .fav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .fav-text { flex: 1; font-size: 0.85rem; }
+    .fav-handle { color: var(--text-muted); cursor: grab; }
+    .add-fav { display: flex; gap: 8px; margin-top: 12px; }
+    .add-fav input { flex: 1; }
+
+    /* ── История команд ── */
+    .history-list { display: flex; flex-direction: column; gap: 6px; max-height: 70vh; overflow-y: auto; }
+    .history-item {
+      display: grid;
+      grid-template-columns: 130px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+    }
+    .history-time { color: var(--text-muted); }
+    .history-cmd { color: var(--text); }
+    .history-badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+    }
+    .badge-ok  { background: rgba(16,185,129,.15); color: var(--accent3); }
+    .badge-err { background: rgba(239,68,68,.15);  color: var(--danger); }
+    .history-filter { display: flex; gap: 8px; margin-bottom: 12px; }
+
+    /* ── Голосовая активация ── */
+    .voice-demo {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .voice-btn {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      background: rgba(0,212,255,.05);
+      color: var(--accent);
+      font-size: 1.5rem;
+      cursor: pointer;
+      margin: 10px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+    .voice-btn:hover { background: rgba(0,212,255,.15); box-shadow: 0 0 20px rgba(0,212,255,.3); }
+    .voice-status { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; }
+
+    /* ── Экспорт/Импорт ── */
+    .export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .export-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    .export-icon { font-size: 2rem; margin-bottom: 8px; }
+    .export-title { font-size: 0.9rem; margin-bottom: 6px; }
+    .export-desc { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; }
+
+    /* ── Уведомление ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--panel);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 12px 20px;
+      color: var(--text);
+      font-size: 0.85rem;
+      box-shadow: 0 4px 20px rgba(0,212,255,.2);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .3s;
+      z-index: 1000;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Разделитель ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .section-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .actions-row { display: flex; gap: 10px; margin-top: 20px; }
+
+    /* ── Скроллбар ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .theme-grid { grid-template-columns: 1fr 1fr; }
+      .export-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Топбар ───────────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="topbar-logo">◈ СИЕН 2.0</div>
+  <nav class="topbar-nav">
+    <a href="/dashboard" class="nav-link">Дашборд</a>
+    <a href="/dashboard/agents" class="nav-link">Агенты</a>
+    <a href="/dashboard/tasks" class="nav-link">Задачи</a>
+    <a href="/dashboard/profile" class="nav-link active">Кабинет</a>
+  </nav>
+</div>
+
+<!-- ── Основной контейнер ───────────────────────────────────── -->
+<div class="container">
+
+  <!-- ── Сайдбар ── -->
+  <aside>
+    <div class="panel">
+      <!-- Аватар -->
+      <div class="avatar-block">
+        <div class="avatar-wrap" onclick="document.getElementById('avatar-input').click()">
+          <div class="avatar" id="avatar-display">🤖</div>
+          <div class="avatar-edit">✏️</div>
+          <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
+        </div>
+        <div class="username-display" id="display-username">Пользователь</div>
+        <div class="user-badge">ADMIN</div>
+      </div>
+
+      <!-- Навигация -->
+      <div class="sidebar-menu">
+        <button class="sidebar-item active" onclick="showSection('profile', this)">
+          <span class="ico">👤</span> Профиль
+        </button>
+        <button class="sidebar-item" onclick="showSection('voice', this)">
+          <span class="ico">🎤</span> Голосовая активация
+        </button>
+        <button class="sidebar-item" onclick="showSection('theme', this)">
+          <span class="ico">🎨</span> Тема HUD
+        </button>
+        <button class="sidebar-item" onclick="showSection('favorites', this)">
+          <span class="ico">⚡</span> Быстрые команды
+        </button>
+        <button class="sidebar-item" onclick="showSection('history', this)">
+          <span class="ico">📋</span> История команд
+        </button>
+        <button class="sidebar-item" onclick="showSection('data', this)">
+          <span class="ico">💾</span> Мои данные
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Основное содержимое ── -->
+  <main>
+
+    <!-- ═══ Профиль ═══ -->
+    <div id="section-profile" class="section active">
+      <div class="panel">
+        <div class="panel-header">👤 Личные данные</div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Имя пользователя</label>
+              <input type="text" id="field-username" placeholder="Иван Иванов" value="Пользователь">
+            </div>
+            <div class="form-group">
+              <label>Обращение Сиен к вам</label>
+              <input type="text" id="field-callname" placeholder="Иван, Шеф, Босс..." value="Хозяин">
+            </div>
+            <div class="form-group">
+              <label>Email (необязательно)</label>
+              <input type="email" id="field-email" placeholder="user@example.com">
+            </div>
+            <div class="form-group">
+              <label>Часовой пояс</label>
+              <select id="field-timezone">
+                <option value="Europe/Moscow">Москва (UTC+3)</option>
+                <option value="Europe/Riga">Рига (UTC+2/3)</option>
+                <option value="Europe/London">Лондон (UTC+0/1)</option>
+                <option value="America/New_York">Нью-Йорк (UTC-5/4)</option>
+                <option value="Asia/Tokyo">Токио (UTC+9)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Язык интерфейса</label>
+              <select id="field-lang">
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="en">🇬🇧 English</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Статус</label>
+              <select id="field-status">
+                <option value="active">🟢 Активен</option>
+                <option value="busy">🟡 Занят</option>
+                <option value="dnd">🔴 Не беспокоить</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions-row">
+            <button class="btn btn-primary" onclick="saveProfile()">💾 Сохранить</button>
+            <button class="btn btn-secondary" onclick="resetProfile()">↩ Сбросить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Голосовая активация ═══ -->
+    <div id="section-voice" class="section">
+      <div class="panel">
+        <div class="panel-header">🎤 Голосовая активация</div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Кодовое слово активации</label>
+              <input type="text" id="field-hotword" value="Сиен" placeholder="Сиен, Сиена, Ассистент...">
+              <small style="color:var(--text-muted);font-size:.75rem;margin-top:4px;">
+                Произнесите кодовое слово, чтобы начать голосовой ввод без нажатия кнопки
+              </small>
+            </div>
+            <div class="form-group">
+              <label>Голосовой движок</label>
+              <select id="field-voice-engine">
+                <option value="browser">Браузер (Web Speech API)</option>
+                <option value="vosk">Vosk (оффлайн)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Чувствительность</label>
+              <input type="range" id="field-sensitivity" min="1" max="10" value="5"
+                     oninput="document.getElementById('sens-val').textContent=this.value">
+              <small id="sens-val" style="color:var(--accent)">5</small>
+            </div>
+          </div>
+
+          <div class="voice-demo">
+            <div style="font-size:.85rem;color:var(--text-muted)">Тест голосовой активации</div>
+            <button class="voice-btn" id="test-voice-btn" onclick="testVoice()">🎤</button>
+            <div class="voice-status" id="voice-status-text">Нажмите для теста</div>
+          </div>
+
+          <div class="actions-row">
+            <button class="btn btn-primary" onclick="saveVoiceSettings()">💾 Сохранить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Тема HUD ═══ -->
+    <div id="section-theme" class="section">
+      <div class="panel">
+        <div class="panel-header">🎨 Тема оформления</div>
+        <div class="panel-body">
+          <div class="section-title">Тема HUD</div>
+          <div class="theme-grid">
+            <div class="theme-card selected" data-theme="cyberpunk" onclick="selectTheme('cyberpunk', this)">
+              <div class="theme-preview theme-cyberpunk"></div>
+              <div class="theme-name">🌆 Киберпанк</div>
+            </div>
+            <div class="theme-card" data-theme="dark" onclick="selectTheme('dark', this)">
+              <div class="theme-preview theme-dark"></div>
+              <div class="theme-name">🌑 Тёмная</div>
+            </div>
+            <div class="theme-card" data-theme="light" onclick="selectTheme('light', this)">
+              <div class="theme-preview theme-light"></div>
+              <div class="theme-name">☀️ Светлая</div>
+            </div>
+          </div>
+
+          <hr class="divider">
+          <div class="section-title">Акцентный цвет</div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input type="color" id="field-accent-color" value="#00d4ff"
+                   oninput="previewAccent(this.value)" style="width:50px;height:36px;padding:2px;">
+            <span style="font-size:.85rem;color:var(--text-muted)">Цвет акцентов HUD</span>
+            <button class="btn btn-sm btn-secondary" onclick="resetAccent()">Сброс</button>
+          </div>
+
+          <hr class="divider">
+          <div class="section-title">Дополнительно</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Шрифт интерфейса</label>
+              <select id="field-font">
+                <option value="courier">Courier New (по умолчанию)</option>
+                <option value="mono">JetBrains Mono</option>
+                <option value="fira">Fira Code</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Размер шрифта</label>
+              <input type="range" min="12" max="18" value="14" id="field-fontsize"
+                     oninput="document.getElementById('fs-val').textContent=this.value+'px'">
+              <small id="fs-val" style="color:var(--accent)">14px</small>
+            </div>
+          </div>
+
+          <div class="actions-row">
+            <button class="btn btn-primary" onclick="saveTheme()">💾 Сохранить тему</button>
+            <button class="btn btn-secondary" onclick="previewTheme()">👁 Предпросмотр</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Быстрые команды ═══ -->
+    <div id="section-favorites" class="section">
+      <div class="panel">
+        <div class="panel-header">⚡ Быстрые команды</div>
+        <div class="panel-body">
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:16px;">
+            Добавьте часто используемые команды для быстрого доступа. Перетащите для изменения порядка.
+          </div>
+          <div class="favorites-list" id="favorites-list">
+            <!-- Заполняется JS -->
+          </div>
+          <div class="add-fav">
+            <input type="text" id="new-fav-input" placeholder="Новая быстрая команда...">
+            <button class="btn btn-primary" onclick="addFavorite()">+ Добавить</button>
+          </div>
+          <div class="actions-row">
+            <button class="btn btn-primary" onclick="saveFavorites()">💾 Сохранить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ История команд ═══ -->
+    <div id="section-history" class="section">
+      <div class="panel">
+        <div class="panel-header">📋 История локальных команд</div>
+        <div class="panel-body">
+          <div class="history-filter">
+            <input type="text" id="history-search" placeholder="Поиск..." oninput="filterHistory(this.value)"
+                   style="flex:1">
+            <select id="history-filter-status" onchange="filterHistory()">
+              <option value="all">Все</option>
+              <option value="ok">Успешные</option>
+              <option value="err">Ошибки</option>
+            </select>
+            <button class="btn btn-sm btn-danger" onclick="clearHistory()">🗑 Очистить</button>
+          </div>
+          <div class="history-list" id="history-list">
+            <!-- Заполняется JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Данные ═══ -->
+    <div id="section-data" class="section">
+      <div class="panel">
+        <div class="panel-header">💾 Управление данными</div>
+        <div class="panel-body">
+          <div class="export-grid">
+            <div class="export-card">
+              <div class="export-icon">📤</div>
+              <div class="export-title">Экспорт профиля</div>
+              <div class="export-desc">Скачайте все настройки, команды и историю в JSON-файл</div>
+              <button class="btn btn-primary" onclick="exportProfile()">Экспортировать</button>
+            </div>
+            <div class="export-card">
+              <div class="export-icon">📥</div>
+              <div class="export-title">Импорт профиля</div>
+              <div class="export-desc">Восстановите настройки из ранее экспортированного файла</div>
+              <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
+                Импортировать
+              </button>
+              <input type="file" id="import-file" accept=".json" style="display:none" onchange="importProfile(this)">
+            </div>
+          </div>
+
+          <hr class="divider">
+          <div class="section-title">Опасная зона</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <button class="btn btn-danger" onclick="clearAllHistory()">🗑 Очистить историю</button>
+            <button class="btn btn-danger" onclick="resetAllSettings()">⚠️ Сбросить все настройки</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Состояние ───────────────────────────────────────────────────
+let state = {
+  username:     "Пользователь",
+  callname:     "Хозяин",
+  email:        "",
+  timezone:     "Europe/Moscow",
+  lang:         "ru",
+  status:       "active",
+  hotword:      "Сиен",
+  voiceEngine:  "browser",
+  sensitivity:  5,
+  theme:        "cyberpunk",
+  accentColor:  "#00d4ff",
+  fontSize:     14,
+  font:         "courier",
+  favorites:    ["статус агентов", "покажи задачи", "загрузка cpu", "мой ip"],
+  history:      [],
+};
+
+// ── Утилиты ─────────────────────────────────────────────────────
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function showSection(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  const sec = document.getElementById('section-' + name);
+  if (sec) sec.classList.add('active');
+  if (btn) btn.classList.add('active');
+  // Lazy load при переключении вкладок
+  if (name === 'history') loadHistory();
+  if (name === 'theme') applyThemeSection();
+}
+
+// ── Профиль ─────────────────────────────────────────────────────
+function saveProfile() {
+  state.username   = document.getElementById('field-username').value;
+  state.callname   = document.getElementById('field-callname').value;
+  state.email      = document.getElementById('field-email').value;
+  state.timezone   = document.getElementById('field-timezone').value;
+  state.lang       = document.getElementById('field-lang').value;
+  state.status     = document.getElementById('field-status').value;
+  document.getElementById('display-username').textContent = state.username;
+  saveToServer('/dashboard/api/profile/save', state);
+  showToast('✅ Профиль сохранён');
+}
+
+function resetProfile() {
+  loadFromServer();
+  showToast('↩ Настройки сброшены');
+}
+
+function handleAvatarUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const av = document.getElementById('avatar-display');
+    av.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    showToast('📸 Аватар обновлён');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Голосовые настройки ─────────────────────────────────────────
+function saveVoiceSettings() {
+  state.hotword     = document.getElementById('field-hotword').value;
+  state.voiceEngine = document.getElementById('field-voice-engine').value;
+  state.sensitivity = parseInt(document.getElementById('field-sensitivity').value);
+  saveToServer('/dashboard/api/profile/save', { voice: { hotword: state.hotword, engine: state.voiceEngine } });
+  showToast('🎤 Голосовые настройки сохранены');
+}
+
+function testVoice() {
+  const btn = document.getElementById('test-voice-btn');
+  const status = document.getElementById('voice-status-text');
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    status.textContent = '❌ Голосовой ввод не поддерживается браузером';
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new SR();
+  rec.lang = 'ru-RU';
+  rec.interimResults = false;
+  btn.style.background = 'rgba(239,68,68,.2)';
+  btn.style.borderColor = '#ef4444';
+  status.textContent = '🎤 Говорите...';
+  rec.start();
+  rec.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    status.textContent = `✅ Распознано: "${text}"`;
+    btn.style.background = '';
+    btn.style.borderColor = '';
+  };
+  rec.onerror = () => {
+    status.textContent = '❌ Ошибка распознавания';
+    btn.style.background = '';
+    btn.style.borderColor = '';
+  };
+}
+
+// ── Тема ─────────────────────────────────────────────────────────
+function selectTheme(themeName, card) {
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  state.theme = themeName;
+  document.documentElement.setAttribute('data-theme', themeName === 'cyberpunk' ? '' : themeName);
+}
+
+function previewAccent(color) {
+  document.documentElement.style.setProperty('--accent', color);
+}
+
+function resetAccent() {
+  const defaults = { cyberpunk: '#00d4ff', dark: '#60a5fa', light: '#2563eb' };
+  const color = defaults[state.theme] || '#00d4ff';
+  document.getElementById('field-accent-color').value = color;
+  previewAccent(color);
+}
+
+function previewTheme() { showToast('👁 Предпросмотр применён'); }
+
+function saveTheme() {
+  state.accentColor = document.getElementById('field-accent-color').value;
+  state.fontSize    = parseInt(document.getElementById('field-fontsize').value);
+  state.font        = document.getElementById('field-font').value;
+  saveToServer('/dashboard/api/profile/save', { theme: state.theme, accentColor: state.accentColor });
+  showToast('🎨 Тема сохранена');
+}
+
+// ── Быстрые команды ──────────────────────────────────────────────
+function renderFavorites() {
+  const list = document.getElementById('favorites-list');
+  list.innerHTML = '';
+  state.favorites.forEach((cmd, i) => {
+    const item = document.createElement('div');
+    item.className = 'fav-item';
+    item.innerHTML = `
+      <span class="fav-handle">⠿</span>
+      <span class="fav-text">${cmd}</span>
+      <button class="btn btn-sm btn-secondary" onclick="runFav(${i})">▶</button>
+      <button class="btn btn-sm btn-danger" onclick="removeFav(${i})">✕</button>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function addFavorite() {
+  const inp = document.getElementById('new-fav-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  state.favorites.push(val);
+  inp.value = '';
+  renderFavorites();
+}
+
+function removeFav(i) {
+  state.favorites.splice(i, 1);
+  renderFavorites();
+}
+
+function runFav(i) {
+  const cmd = state.favorites[i];
+  showToast(`▶ Выполняется: ${cmd}`);
+  fetch('/dashboard/api/command', { method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ text: cmd }) });
+}
+
+function saveFavorites() {
+  saveToServer('/dashboard/api/profile/save', { favorites: state.favorites });
+  showToast('⚡ Быстрые команды сохранены');
+}
+
+// ── История ──────────────────────────────────────────────────────
+function renderHistory(data) {
+  const list = document.getElementById('history-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px">История пуста</div>';
+    return;
+  }
+  list.innerHTML = data.map(h => `
+    <div class="history-item">
+      <span class="history-time">${h.ts}</span>
+      <span class="history-cmd">${h.cmd}</span>
+      <span class="history-badge badge-${h.ok ? 'ok' : 'err'}">${h.ok ? '✓ OK' : '✗ ERR'}</span>
+    </div>
+  `).join('');
+}
+
+function filterHistory(q) {
+  const query = (document.getElementById('history-search').value || '').toLowerCase();
+  const status = document.getElementById('history-filter-status').value;
+  const filtered = state.history.filter(h => {
+    const matchQ = !query || h.cmd.toLowerCase().includes(query);
+    const matchS = status === 'all' || (status === 'ok' && h.ok) || (status === 'err' && !h.ok);
+    return matchQ && matchS;
+  });
+  renderHistory(filtered);
+}
+
+function clearHistory() {
+  if (!confirm('Очистить историю команд?')) return;
+  state.history = [];
+  renderHistory([]);
+  saveToServer('/dashboard/api/profile/clear_history', {});
+  showToast('🗑 История очищена');
+}
+
+// ── Данные ───────────────────────────────────────────────────────
+function exportProfile() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `sien_profile_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 Профиль экспортирован');
+}
+
+function importProfile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      Object.assign(state, imported);
+      applyState();
+      saveToServer('/dashboard/api/profile/save', state);
+      showToast('📥 Профиль импортирован');
+    } catch {
+      showToast('❌ Ошибка импорта файла');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAllHistory() {
+  if (!confirm('Очистить ВСЮ историю команд? Это нельзя отменить.')) return;
+  state.history = [];
+  renderHistory([]);
+  saveToServer('/dashboard/api/profile/clear_history', {});
+  showToast('🗑 Вся история очищена');
+}
+
+function resetAllSettings() {
+  if (!confirm('Сбросить ВСЕ настройки профиля?')) return;
+  fetch('/dashboard/api/profile/reset', { method: 'POST' })
+    .then(() => { location.reload(); });
+}
+
+// ── Серверный API ────────────────────────────────────────────────
+async function saveToServer(url, data) {
+  // Всегда сохраняем в localStorage — работает без сервера
+  try {
+    Object.assign(state, data);
+    localStorage.setItem('sien_profile', JSON.stringify(state));
+  } catch(e) {}
+  // Пробуем сервер с таймаутом 3 сек
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 3000);
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      signal: ctrl.signal,
+    });
+  } catch (e) {
+    // Сервер недоступен — данные уже в localStorage
+    console.info('Сервер недоступен, сохранено локально');
+  }
+}
+
+async function loadFromServer() {
+  // Сначала из localStorage (мгновенно)
+  try {
+    const saved = localStorage.getItem('sien_profile');
+    if (saved) { Object.assign(state, JSON.parse(saved)); applyState(); }
+  } catch(e) {}
+  // Потом с сервера (обновляем если доступен)
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 3000);
+    const r = await fetch('/dashboard/api/profile/load', { signal: ctrl.signal });
+    if (r.ok) {
+      const data = await r.json();
+      Object.assign(state, data);
+      applyState();
+      localStorage.setItem('sien_profile', JSON.stringify(state));
+    }
+  } catch (e) {
+    console.info('Профиль загружен из localStorage (сервер недоступен)');
+  }
+}
+
+async function loadHistory() {
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 3000);
+    const r = await fetch('/dashboard/api/profile/history', { signal: ctrl.signal });
+    if (r.ok) {
+      state.history = await r.json();
+      renderHistory(state.history);
+    } else {
+      renderHistory([]);
+    }
+  } catch {
+    renderHistory(state.history || []);
+  }
+}
+
+// ── Применение состояния к UI ────────────────────────────────────
+function applyState() {
+  // Профиль
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('field-username',    state.username);
+  set('field-callname',    state.callname);
+  set('field-email',       state.email);
+  set('field-timezone',    state.timezone   || 'Europe/Moscow');
+  set('field-lang',        state.lang       || 'ru');
+  set('field-status',      state.status     || 'active');
+  // Голос
+  set('field-hotword',      state.hotword      || 'Сиен');
+  set('field-voice-engine', state.voiceEngine  || 'browser');
+  set('field-sensitivity',  state.sensitivity  || 5);
+  const sv = document.getElementById('sens-val');
+  if (sv) sv.textContent = state.sensitivity || 5;
+  // Имя в шапке
+  const dn = document.getElementById('display-username');
+  if (dn) dn.textContent = state.username || 'Пользователь';
+  // Тема и цвет
+  applyThemeSection();
+  renderFavorites();
+}
+
+function applyThemeSection() {
+  // Выделяем активную тему
+  document.querySelectorAll('.theme-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.theme === (state.theme || 'cyberpunk'));
+  });
+  // Применяем data-theme
+  document.documentElement.setAttribute('data-theme', state.theme === 'cyberpunk' ? '' : (state.theme || ''));
+  // Акцентный цвет
+  if (state.accentColor) {
+    document.documentElement.style.setProperty('--accent', state.accentColor);
+    const ac = document.getElementById('field-accent-color');
+    if (ac) ac.value = state.accentColor;
+  }
+  // Шрифт и размер
+  if (state.fontSize) {
+    const fs = document.getElementById('field-fontsize');
+    const fv = document.getElementById('fs-val');
+    if (fs) fs.value = state.fontSize;
+    if (fv) fv.textContent = state.fontSize + 'px';
+  }
+  if (state.font) {
+    const ff = document.getElementById('field-font');
+    if (ff) ff.value = state.font;
+  }
+}
+
+// ── Инициализация ────────────────────────────────────────────────
+(async () => {
+  await loadFromServer();
+  await loadHistory();
+  renderFavorites();
+})();
+</script>
+</body>
+</html>

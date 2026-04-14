@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кронос — Почтовые аккаунты | Сиен</title>
+<style>
+  :root {
+    --bg:       #0a0e1a;
+    --bg2:      #111827;
+    --bg3:      #1a2235;
+    --accent:   #00d4ff;
+    --accent2:  #7c3aed;
+    --ok:       #22c55e;
+    --warn:     #f59e0b;
+    --error:    #ef4444;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --border:   #1e3a5f;
+    --font:     'Courier New', monospace;
+    --radius:   8px;
+  }
+
+    /* ── Сиен 3.0 patch ── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+    body { font-size: 14px; line-height: 1.55; }
+    .history-item, .card, .row, .item, td { word-break: break-word; }
+
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+  }
+
+  /* ── Шапка ── */
+  .header {
+    background: linear-gradient(90deg, var(--bg2), var(--bg3));
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header h1 {
+    font-size: 1.2rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .badge {
+    background: var(--accent2);
+    color: #fff;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+  }
+
+  /* ── Макет ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    padding: 24px;
+    max-width: 1200px;
+  }
+
+  /* ── Панель ── */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 18px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--accent);
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ── Форма ── */
+  .form-body { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 0.75rem; color: var(--muted); letter-spacing: 1px; }
+  .field input, .field select, .field textarea {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.85rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.1);
+  }
+  .field input::placeholder { color: var(--muted); }
+
+  .field-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+  .field-row .field:first-child { flex: 1; }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .checkbox-row input[type=checkbox] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .provider-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg3);
+  }
+  .pill:hover { border-color: var(--accent); color: var(--accent); }
+  .pill.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: bold; }
+
+  .note-box {
+    background: rgba(0,212,255,0.05);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    min-height: 40px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: var(--font);
+    font-size: 0.85rem;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); font-weight: bold; }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-danger  { background: transparent; border: 1px solid var(--error); color: var(--error); }
+  .btn-danger:hover  { background: var(--error); color: #fff; }
+  .btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover   { border-color: var(--accent); color: var(--accent); }
+  .btn-test    { background: var(--bg3); border: 1px solid var(--ok); color: var(--ok); font-size: 0.75rem; padding: 6px 12px; }
+  .btn-test:hover { background: var(--ok); color: var(--bg); }
+  .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-row { display: flex; gap: 10px; }
+
+  /* ── Список аккаунтов ── */
+  .accounts-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+  .account-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .account-card:hover { border-color: var(--accent); }
+  .account-card.disabled { opacity: 0.5; }
+
+  .account-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .account-label {
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: var(--accent);
+    margin-bottom: 3px;
+  }
+  .account-email { font-size: 0.8rem; color: var(--text); }
+  .account-provider {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  .status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .status-ok    { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+  .status-error { background: var(--error); box-shadow: 0 0 6px var(--error); }
+  .status-checking { background: var(--warn); animation: pulse 1s infinite; }
+  .status-unknown { background: var(--muted); }
+
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .account-details {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 8px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .account-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+  /* ── Лог доступа ── */
+  .log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+  }
+  .log-table th {
+    text-align: left;
+    padding: 8px 10px;
+    background: var(--bg3);
+    color: var(--muted);
+    font-weight: normal;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+  .log-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(30,58,95,0.5);
+    color: var(--text);
+  }
+  .log-table tr:hover td { background: rgba(0,212,255,0.03); }
+  .log-ok   { color: var(--ok); }
+  .log-fail { color: var(--error); }
+
+  /* ── Тосты ── */
+  #toast-container {
+    position: fixed; bottom: 20px; right: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 1000;
+  }
+  .toast {
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    max-width: 320px;
+    animation: slideIn 0.3s ease;
+    cursor: pointer;
+  }
+  .toast-ok    { background: #14532d; border: 1px solid var(--ok); color: var(--ok); }
+  .toast-error { background: #450a0a; border: 1px solid var(--error); color: var(--error); }
+  .toast-info  { background: #0c1a2e; border: 1px solid var(--accent); color: var(--accent); }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ── Секция ── */
+  .section-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+  .tab {
+    padding: 10px 18px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: var(--muted);
+    letter-spacing: 1px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .empty-state {
+    padding: 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔐 Кронос &nbsp;/&nbsp; Почтовые аккаунты</h1>
+  <span class="badge">СИЕН 02</span>
+  <span id="header-count" style="margin-left: auto; color: var(--muted); font-size: 0.8rem;"></span>
+</div>
+
+<div class="layout">
+
+  <!-- ═══ ЛЕВАЯ КОЛОНКА: форма добавления ═══ -->
+  <div>
+    <div class="panel">
+      <div class="panel-header">
+        <span id="form-mode-title">➕ Добавить почтовый аккаунт</span>
+        <button class="btn btn-ghost btn-sm" id="btn-cancel-edit" style="display:none" onclick="cancelEdit()">Отмена</button>
+      </div>
+      <div class="form-body">
+
+        <!-- Провайдер -->
+        <div class="field">
+          <label>ПОЧТОВЫЙ ПРОВАЙДЕР</label>
+          <div class="provider-pills">
+            <div class="pill active" data-provider="gmail"   onclick="selectProvider('gmail')">Gmail</div>
+            <div class="pill"        data-provider="yandex"  onclick="selectProvider('yandex')">Яндекс</div>
+            <div class="pill"        data-provider="mailru"  onclick="selectProvider('mailru')">Mail.ru</div>
+            <div class="pill"        data-provider="outlook" onclick="selectProvider('outlook')">Outlook</div>
+            <div class="pill"        data-provider="custom"  onclick="selectProvider('custom')">Другой</div>
+          </div>
+        </div>
+
+        <!-- Подсказка -->
+        <div class="note-box" id="provider-note">
+          Для Gmail нужен App Password (не основной пароль).<br>
+          Включи двухфакторную аутентификацию → Google Account → Безопасность → Пароли приложений.
+        </div>
+
+        <!-- Метка -->
+        <div class="field">
+          <label>МЕТКА (ОТОБРАЖАЕМОЕ ИМЯ)</label>
+          <input type="text" id="f-label" placeholder="Рабочий Gmail, Личная Яндекс...">
+        </div>
+
+        <!-- Email -->
+        <div class="field">
+          <label>EMAIL АДРЕС</label>
+          <input type="email" id="f-email" placeholder="user@gmail.com">
+        </div>
+
+        <!-- Пароль -->
+        <div class="field">
+          <label>ПАРОЛЬ / APP PASSWORD</label>
+          <input type="password" id="f-password" placeholder="••••••••••••••••">
+        </div>
+
+        <!-- IMAP -->
+        <div class="field">
+          <label>IMAP СЕРВЕР</label>
+          <div class="field-row">
+            <div class="field">
+              <input type="text" id="f-imap-host" placeholder="imap.gmail.com">
+            </div>
+            <div class="field" style="width: 80px">
+              <input type="number" id="f-imap-port" value="993" min="1" max="65535">
+            </div>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="f-imap-ssl" checked>
+            SSL/TLS шифрование
+          </label>
+        </div>
+
+        <!-- SMTP -->
+        <div class="field">
+          <label>SMTP СЕРВЕР</label>
+          <div class="field-row">
+            <div class="field">
+              <input type="text" id="f-smtp-host" placeholder="smtp.gmail.com">
+            </div>
+            <div class="field" style="width: 80px">
+              <input type="number" id="f-smtp-port" value="587" min="1" max="65535">
+            </div>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="f-smtp-tls" checked>
+            STARTTLS/SSL
+          </label>
+        </div>
+
+        <!-- Интервал -->
+        <div class="field">
+          <label>ПРОВЕРЯТЬ КАЖДЫЕ (МИНУТ)</label>
+          <input type="number" id="f-interval" value="15" min="1" max="1440">
+        </div>
+
+        <!-- Примечание -->
+        <div class="field">
+          <label>ПРИМЕЧАНИЕ (ОПЦИОНАЛЬНО)</label>
+          <input type="text" id="f-note" placeholder="Корпоративный ящик отдела маркетинга">
+        </div>
+
+        <!-- Статус активен -->
+        <label class="checkbox-row">
+          <input type="checkbox" id="f-enabled" checked>
+          Аккаунт активен (включён для мониторинга)
+        </label>
+
+        <!-- Кнопки -->
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-save" onclick="saveAccount()" style="flex:1">
+            💾 Сохранить аккаунт
+          </button>
+          <button class="btn btn-test" id="btn-test" onclick="testConnection()" title="Тест IMAP">
+            🔌 Тест
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ПРАВАЯ КОЛОНКА: список + лог ═══ -->
+  <div class="panel">
+    <div class="section-tabs">
+      <div class="tab active" onclick="showTab('accounts')">📮 Аккаунты</div>
+      <div class="tab" onclick="showTab('log')">📋 Лог доступа</div>
+      <div class="tab" onclick="showTab('inbox')">📬 Входящие</div>
+    </div>
+
+    <!-- ── Вкладка: Аккаунты ── -->
+    <div class="tab-content active" id="tab-accounts">
+      <div class="panel-header">
+        <span>Подключённые ящики</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadAccounts()">🔄 Обновить</button>
+      </div>
+      <div id="accounts-list" class="accounts-list">
+        <div class="empty-state">
+          <div class="spinner"></div><br><br>Загрузка...
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Вкладка: Лог ── -->
+    <div class="tab-content" id="tab-log">
+      <div class="panel-header">
+        <span>Лог доступа к секретам</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadLog()">🔄 Обновить</button>
+      </div>
+      <div style="overflow-x:auto; padding: 0 4px">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>ВРЕМЯ</th>
+              <th>СЕКРЕТ</th>
+              <th>АГЕНТ</th>
+              <th>ДЕЙСТВИЕ</th>
+              <th>IP</th>
+              <th>✓</th>
+            </tr>
+          </thead>
+          <tbody id="log-body">
+            <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Нажми «Обновить»</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Вкладка: Входящие ── -->
+    <div class="tab-content" id="tab-inbox">
+      <div class="panel-header">
+        <span>Входящие письма (кэш Вэня)</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="checkMailNow()">📬 Проверить сейчас</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadInbox()">🔄 Обновить</button>
+        </div>
+      </div>
+      <div id="inbox-list" class="accounts-list">
+        <div class="empty-state">Нажми «Обновить» для загрузки писем</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// Конфигурация
+// ═══════════════════════════════════════════════════════════════════
+const CRONOS = 'http://localhost:8001';
+const WEN    = 'http://localhost:8006';
+
+const HEADERS = {
+  'Content-Type': 'application/json',
+  'x-agent-name': 'orchestrator',
+  'x-agent-token': 'token-orchestrator-alpha',
+};
+
+const PROVIDER_PRESETS = {
+  gmail:   { imap_host: 'imap.gmail.com',            imap_port: 993, imap_ssl: true,  smtp_host: 'smtp.gmail.com',            smtp_port: 587, smtp_tls: true,  note: 'Для Gmail нужен App Password. Включи двухфакторную аутентификацию → Google Account → Безопасность → Пароли приложений.' },
+  yandex:  { imap_host: 'imap.yandex.ru',            imap_port: 993, imap_ssl: true,  smtp_host: 'smtp.yandex.ru',            smtp_port: 465, smtp_tls: true,  note: 'Включи IMAP в настройках Яндекс.Почты: Настройки → Почтовые клиенты → Разрешить доступ.' },
+  mailru:  { imap_host: 'imap.mail.ru',              imap_port: 993, imap_ssl: true,  smtp_host: 'smtp.mail.ru',              smtp_port: 465, smtp_tls: true,  note: 'Включи внешний доступ в Mail.ru: Все настройки → Внешний доступ к почтовому ящику.' },
+  outlook: { imap_host: 'outlook.office365.com',     imap_port: 993, imap_ssl: true,  smtp_host: 'smtp.office365.com',        smtp_port: 587, smtp_tls: true,  note: 'Для корпоративного Outlook уточни домен у IT-администратора.' },
+  custom:  { imap_host: '',                           imap_port: 993, imap_ssl: true,  smtp_host: '',                          smtp_port: 587, smtp_tls: true,  note: 'Укажи настройки IMAP/SMTP вручную согласно документации почтового сервера.' },
+};
+
+let currentProvider = 'gmail';
+let editingId = null;
+
+// ═══════════════════════════════════════════════════════════════════
+// Toast уведомления
+// ═══════════════════════════════════════════════════════════════════
+function toast(msg, type = 'info', ms = 4000) {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  el.onclick = () => el.remove();
+  c.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Выбор провайдера
+// ═══════════════════════════════════════════════════════════════════
+function selectProvider(provider) {
+  currentProvider = provider;
+  document.querySelectorAll('.pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.provider === provider);
+  });
+
+  const preset = PROVIDER_PRESETS[provider];
+  if (!preset) return;
+
+  document.getElementById('f-imap-host').value = preset.imap_host;
+  document.getElementById('f-imap-port').value = preset.imap_port;
+  document.getElementById('f-imap-ssl').checked = preset.imap_ssl;
+  document.getElementById('f-smtp-host').value = preset.smtp_host;
+  document.getElementById('f-smtp-port').value = preset.smtp_port;
+  document.getElementById('f-smtp-tls').checked = preset.smtp_tls;
+  document.getElementById('provider-note').innerHTML = preset.note.replace(/\n/g, '<br>');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CRUD операции
+// ═══════════════════════════════════════════════════════════════════
+async function saveAccount() {
+  const btn = document.getElementById('btn-save');
+  const label = document.getElementById('f-label').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const password = document.getElementById('f-password').value;
+
+  if (!label || !email) { toast('⚠️ Укажи метку и email адрес', 'error'); return; }
+  if (!editingId && !password) { toast('⚠️ Укажи пароль', 'error'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Сохранение...';
+
+  const body = {
+    label,
+    email,
+    provider: currentProvider,
+    imap_host: document.getElementById('f-imap-host').value.trim(),
+    imap_port: parseInt(document.getElementById('f-imap-port').value),
+    imap_ssl: document.getElementById('f-imap-ssl').checked,
+    smtp_host: document.getElementById('f-smtp-host').value.trim(),
+    smtp_port: parseInt(document.getElementById('f-smtp-port').value),
+    smtp_tls: document.getElementById('f-smtp-tls').checked,
+    enabled: document.getElementById('f-enabled').checked,
+    check_interval_minutes: parseInt(document.getElementById('f-interval').value) || 15,
+    note: document.getElementById('f-note').value.trim() || null,
+  };
+
+  if (password) body.password = password;
+
+  try {
+    const url = editingId
+      ? `${CRONOS}/email/accounts/${editingId}`
+      : `${CRONOS}/email/accounts`;
+    const method = editingId ? 'PUT' : 'POST';
+
+    const r = await fetch(url, { method, headers: HEADERS, body: JSON.stringify(body) });
+    const d = await r.json();
+
+    if (!r.ok) throw new Error(d.detail || 'Ошибка сервера');
+
+    toast(d.message || `✅ Аккаунт ${email} сохранён`, 'ok');
+    resetForm();
+    loadAccounts();
+  } catch (e) {
+    toast(`❌ ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '💾 Сохранить аккаунт';
+  }
+}
+
+async function deleteAccount(id, email) {
+  if (!confirm(`Удалить аккаунт ${email}?\n\nПароль также будет удалён из Кроноса.`)) return;
+  try {
+    const r = await fetch(`${CRONOS}/email/accounts/${id}`, {
+      method: 'DELETE', headers: HEADERS
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Ошибка');
+    toast(`🗑️ Аккаунт ${email} удалён`, 'info');
+    loadAccounts();
+  } catch (e) {
+    toast(`❌ ${e.message}`, 'error');
+  }
+}
+
+function editAccount(acc) {
+  editingId = acc.id;
+  document.getElementById('form-mode-title').textContent = `✏️ Редактировать: ${acc.email}`;
+  document.getElementById('btn-cancel-edit').style.display = 'block';
+
+  selectProvider(acc.provider || 'custom');
+  document.getElementById('f-label').value = acc.label;
+  document.getElementById('f-email').value = acc.email;
+  document.getElementById('f-email').disabled = true; // нельзя менять email
+  document.getElementById('f-password').placeholder = '(не изменять)';
+  document.getElementById('f-imap-host').value = acc.imap_host;
+  document.getElementById('f-imap-port').value = acc.imap_port;
+  document.getElementById('f-imap-ssl').checked = acc.imap_ssl;
+  document.getElementById('f-smtp-host').value = acc.smtp_host;
+  document.getElementById('f-smtp-port').value = acc.smtp_port;
+  document.getElementById('f-smtp-tls').checked = acc.smtp_tls;
+  document.getElementById('f-enabled').checked = acc.enabled;
+  document.getElementById('f-interval').value = acc.check_interval_minutes;
+  document.getElementById('f-note').value = acc.note || '';
+
+  window.scrollTo(0, 0);
+}
+
+function cancelEdit() {
+  editingId = null;
+  resetForm();
+}
+
+function resetForm() {
+  editingId = null;
+  document.getElementById('form-mode-title').textContent = '➕ Добавить почтовый аккаунт';
+  document.getElementById('btn-cancel-edit').style.display = 'none';
+  ['f-label','f-email','f-password','f-note'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = '';
+    el.disabled = false;
+  });
+  document.getElementById('f-password').placeholder = '••••••••••••••••';
+  document.getElementById('f-interval').value = '15';
+  document.getElementById('f-enabled').checked = true;
+  selectProvider('gmail');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Тест соединения
+// ═══════════════════════════════════════════════════════════════════
+async function testConnection() {
+  if (!editingId) {
+    toast('⚠️ Сначала сохрани аккаунт, потом тестируй', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-test');
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  toast('🔌 Тестирую IMAP подключение...', 'info');
+
+  try {
+    const r = await fetch(`${CRONOS}/email/accounts/${editingId}/test`, {
+      method: 'POST', headers: HEADERS
+    });
+    const d = await r.json();
+    toast(d.message || '✅ Тест пройден', d.status === 'ok' ? 'ok' : 'error', 6000);
+  } catch (e) {
+    toast(`❌ Кронос недоступен: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔌 Тест';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Загрузка данных
+// ═══════════════════════════════════════════════════════════════════
+async function loadAccounts() {
+  const list = document.getElementById('accounts-list');
+  try {
+    const r = await fetch(`${CRONOS}/email/accounts`);
+    const d = await r.json();
+    const accounts = d.accounts || [];
+
+    document.getElementById('header-count').textContent =
+      `Аккаунтов: ${accounts.length} | Активных: ${accounts.filter(a=>a.enabled).length}`;
+
+    if (!accounts.length) {
+      list.innerHTML = '<div class="empty-state">📭 Нет почтовых аккаунтов.<br>Добавь первый ящик слева.</div>';
+      return;
+    }
+
+    list.innerHTML = accounts.map(acc => `
+      <div class="account-card ${acc.enabled ? '' : 'disabled'}">
+        <div class="account-top">
+          <div>
+            <div class="account-label">${acc.label}</div>
+            <div class="account-email">${acc.email}</div>
+            <div class="account-provider">${acc.provider} · ${acc.enabled ? 'Активен' : 'Отключён'}</div>
+          </div>
+          <div class="status-dot status-unknown" id="dot-${acc.id}" title="Проверь статус в Вэне"></div>
+        </div>
+        <div class="account-details">
+          <span>📥 ${acc.imap_host}:${acc.imap_port}</span>
+          <span>📤 ${acc.smtp_host}:${acc.smtp_port}</span>
+          <span>⏱ каждые ${acc.check_interval_minutes} мин</span>
+          ${acc.note ? `<span title="${acc.note}">📝 ${acc.note.slice(0,30)}...</span>` : ''}
+        </div>
+        <div class="account-actions">
+          <button class="btn btn-ghost btn-sm" onclick='editAccount(${JSON.stringify(acc)})'>✏️ Редактировать</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAccount(${acc.id}, '${acc.email}')">🗑️ Удалить</button>
+        </div>
+      </div>
+    `).join('');
+
+    // Загружаем статусы из Вэня
+    loadMailStatus();
+
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state">❌ Кронос недоступен<br><small>${e.message}</small></div>`;
+  }
+}
+
+async function loadMailStatus() {
+  try {
+    const r = await fetch(`${WEN}/mail/status`);
+    const d = await r.json();
+    (d.accounts || []).forEach(acc => {
+      const dot = document.getElementById(`dot-${acc.id || '_'}`);
+      // Ищем по email если нет id
+      const dots = document.querySelectorAll('.status-dot');
+      // Простое совпадение по порядку — улучши при необходимости
+      const statusClass = {ok:'status-ok', error:'status-error', checking:'status-checking'}[acc.status] || 'status-unknown';
+      if (dot) { dot.className = `status-dot ${statusClass}`; dot.title = acc.status; }
+    });
+  } catch {}
+}
+
+async function loadLog() {
+  const tbody = document.getElementById('log-body');
+  try {
+    const r = await fetch(`${CRONOS}/email/access_log?limit=50`);
+    const d = await r.json();
+    const rows = d.log || [];
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Лог пуст</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(row => `
+      <tr>
+        <td style="color:var(--muted)">${row.accessed_at?.slice(0,16) || '—'}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${row.secret_key}">${row.secret_key}</td>
+        <td style="color:var(--accent)">${row.agent_name}</td>
+        <td>${row.action}</td>
+        <td style="color:var(--muted)">${row.ip_address || '—'}</td>
+        <td class="${row.success ? 'log-ok' : 'log-fail'}">${row.success ? '✓' : '✗'}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--error)">❌ ${e.message}</td></tr>`;
+  }
+}
+
+async function loadInbox() {
+  const list = document.getElementById('inbox-list');
+  list.innerHTML = '<div class="empty-state"><span class="spinner"></span></div>';
+  try {
+    const r = await fetch(`${WEN}/mail/inbox?limit=30`);
+    const d = await r.json();
+    const emails = d.emails || [];
+
+    if (!emails.length) {
+      list.innerHTML = '<div class="empty-state">📭 Входящих нет</div>';
+      return;
+    }
+
+    list.innerHTML = emails.map(m => `
+      <div class="account-card" style="${!m.is_read ? 'border-color:var(--accent)' : ''}">
+        <div class="account-top">
+          <div>
+            <div class="account-label" style="font-size:0.85rem">${m.subject || '(без темы)'}</div>
+            <div class="account-email" style="color:var(--muted)">${m.sender || '—'}</div>
+            <div class="account-provider">${m.account_email} · ${m.received_at?.slice(0,16)}</div>
+          </div>
+          <div style="font-size:0.7rem;color:${m.is_read ? 'var(--muted)' : 'var(--accent)'}">${m.is_read ? '' : '🔵 НОВОЕ'}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state">❌ Вэнь недоступен<br><small>${e.message}</small></div>`;
+  }
+}
+
+async function checkMailNow() {
+  toast('📬 Запускаю проверку почты...', 'info');
+  try {
+    const r = await fetch(`${WEN}/mail/check`, { method: 'POST' });
+    const d = await r.json();
+    const total = (d.results || []).reduce((s, r) => s + (r.new_emails || 0), 0);
+    toast(`✅ Проверено. Новых писем: ${total}`, 'ok', 5000);
+    loadInbox();
+  } catch (e) {
+    toast(`❌ Вэнь недоступен: ${e.message}`, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Вкладки
+// ═══════════════════════════════════════════════════════════════════
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(`tab-${name}`)?.classList.add('active');
+  document.querySelectorAll('.tab').forEach(el => {
+    if (el.textContent.toLowerCase().includes(name === 'accounts' ? 'аккаунт' : name === 'log' ? 'лог' : 'входящ'))
+      el.classList.add('active');
+  });
+
+  if (name === 'log') loadLog();
+  if (name === 'inbox') loadInbox();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Инициализация
+// ═══════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  selectProvider('gmail');
+  loadAccounts();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сиен 3.0 — Дашборд</title>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   Сиен 3.0 Dashboard — cyberpunk SPA
+   ══════════════════════════════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+:root {
+  --bg:         #050a0f;
+  --bg-panel:   #090d14;
+  --bg-panel2:  #0c1219;
+  --bg-input:   #0a0f16;
+  --cyan:       #00f5ff;
+  --cyan-dim:   #00b8c8;
+  --cyan-glow:  rgba(0, 245, 255, 0.12);
+  --purple:     #bf00ff;
+  --purple-dim: #8800bb;
+  --green:      #39ff14;
+  --yellow:     #ffd700;
+  --red:        #ff2d55;
+  --text:       #d4e2f0;
+  --text-dim:   #6a7a8a;
+  --border:     rgba(0, 245, 255, 0.18);
+  --border2:    rgba(191, 0, 255, 0.15);
+  --radius:     4px;
+  --font-mono:  'Consolas', 'Menlo', 'Courier New', monospace;
+  --font-body:  -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
+}
+
+html, body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Фон-сетка ────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* ── HEADER ───────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 22px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  animation: scan 4s linear infinite;
+}
+@keyframes scan {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--cyan);
+  letter-spacing: 6px;
+  text-shadow: 0 0 10px var(--cyan), 0 0 30px var(--cyan-dim);
+}
+.sublogo {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 3px;
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: var(--radius);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan-glow);
+}
+.btn-primary {
+  border-color: var(--cyan-dim);
+  color: var(--cyan);
+  background: rgba(0, 245, 255, 0.05);
+}
+.btn-primary:hover {
+  background: rgba(0, 245, 255, 0.12);
+}
+.btn-danger:hover {
+  border-color: var(--red);
+  color: var(--red);
+  box-shadow: 0 0 10px rgba(255, 45, 85, 0.3);
+}
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+/* ── ТАБЫ ─────────────────────────────────── */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 22px;
+  padding: 0 4px;
+}
+.tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 10px 18px;
+  cursor: pointer;
+  border-radius: var(--radius) var(--radius) 0 0;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  position: relative;
+  top: 1px;
+}
+.tab:hover {
+  color: var(--text);
+  background: rgba(0, 245, 255, 0.04);
+}
+.tab.active {
+  color: var(--cyan);
+  background: var(--bg-panel);
+  border-color: var(--border);
+  border-bottom-color: var(--bg-panel);
+}
+.tab-icon {
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+.tab-content {
+  display: none;
+  animation: fade-in 0.25s ease;
+}
+.tab-content.active {
+  display: block;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── КАРТОЧКИ ─────────────────────────────── */
+.card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 18px;
+  min-width: 0;
+  position: relative;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--purple), transparent);
+  opacity: 0.5;
+}
+
+.card-title {
+  font-size: 12px;
+  color: var(--cyan-dim);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.card-title .title-icon { color: var(--purple); }
+.card-title-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* ── ФОРМЫ ────────────────────────────────── */
+.form-row {
+  margin-bottom: 16px;
+  min-width: 0;
+}
+.form-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 6px var(--cyan-glow);
+}
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+.form-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.form-error {
+  font-size: 11px;
+  color: var(--red);
+  margin-top: 4px;
+  display: none;
+}
+.form-error.show {
+  display: block;
+}
+.form-row.error .form-input,
+.form-row.error .form-select {
+  border-color: var(--red);
+}
+
+/* ── ТАБЛИЦЫ ──────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th,
+.table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.table th {
+  color: var(--cyan-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  background: var(--bg-panel2);
+  font-weight: normal;
+  white-space: nowrap;
+}
+.table td { word-break: break-word; }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: rgba(0, 245, 255, 0.04); }
+
+/* ── БЕЙДЖИ ───────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+.badge-ok       { background: rgba(57,255,20,0.15); color: var(--green); border: 1px solid rgba(57,255,20,0.4); }
+.badge-offline  { background: rgba(74,90,106,0.2); color: var(--text-dim); border: 1px solid var(--border); }
+.badge-error    { background: rgba(255,45,85,0.15); color: var(--red); border: 1px solid rgba(255,45,85,0.4); }
+.badge-warning  { background: rgba(255,215,0,0.15); color: var(--yellow); border: 1px solid rgba(255,215,0,0.4); }
+
+/* ── АГЕНТЫ GRID ──────────────────────────── */
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.agent-card {
+  background: var(--bg-panel2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-dim);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  transition: all 0.2s;
+  min-width: 0;
+}
+.agent-card.status-ok       { border-left-color: var(--green); }
+.agent-card.status-offline  { border-left-color: var(--text-dim); }
+.agent-card.status-error    { border-left-color: var(--red); }
+.agent-card:hover {
+  border-color: var(--cyan-dim);
+  box-shadow: 0 0 8px var(--cyan-glow);
+}
+.agent-card-name {
+  font-size: 13px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+.agent-card-role {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.agent-card-url {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+/* ── СТАТИСТИКА ───────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.stat-item {
+  background: var(--bg-panel2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--cyan);
+  text-shadow: 0 0 6px var(--cyan-glow);
+  margin-bottom: 4px;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── TOAST-УВЕДОМЛЕНИЯ ────────────────────── */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+}
+.toast {
+  background: var(--bg-panel);
+  border: 1px solid var(--cyan-dim);
+  border-left: 4px solid var(--cyan);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 12px var(--cyan-glow);
+  animation: slide-in 0.3s ease;
+  font-size: 13px;
+  word-break: break-word;
+}
+.toast.success { border-left-color: var(--green); }
+.toast.error   { border-left-color: var(--red); }
+.toast.warning { border-left-color: var(--yellow); }
+.toast-title { font-weight: bold; margin-bottom: 3px; }
+@keyframes slide-in {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+/* ── ЗАГРУЗКА ─────────────────────────────── */
+.loading {
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  text-align: center;
+  padding: 30px 16px;
+}
+.empty {
+  color: var(--text-dim);
+  text-align: center;
+  padding: 40px 16px;
+  font-style: italic;
+}
+
+/* ── RESPONSIVE ───────────────────────────── */
+@media (max-width: 700px) {
+  .wrapper { padding: 12px; }
+  .header { padding: 12px 16px; }
+  .card { padding: 16px; }
+  .logo { font-size: 20px; letter-spacing: 4px; }
+  .tab { padding: 8px 12px; font-size: 12px; }
+  .stat-value { font-size: 20px; }
+}
+
+/* ── Дополнительно ────────────────────────── */
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.row > * { min-width: 0; }
+.mb-sm { margin-bottom: 8px; }
+.mt-sm { margin-top: 8px; }
+.mb { margin-bottom: 16px; }
+.text-dim { color: var(--text-dim); }
+.text-cyan { color: var(--cyan); }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.mono { font-family: var(--font-mono); }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════════ -->
+  <header class="header">
+    <div>
+      <div class="logo">СИЕН 3.0</div>
+      <div class="sublogo">DASHBOARD // CONTROL PANEL</div>
+    </div>
+    <div class="header-actions">
+      <a href="/hud/" class="btn">← HUD</a>
+      <button class="btn" id="btn-refresh-all">↻ ОБНОВИТЬ</button>
+      <span class="badge badge-ok" id="orchestrator-badge">ОРКЕСТРАТОР</span>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ТАБЫ
+       ═══════════════════════════════════════════════════════════ -->
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="profile">
+      <span class="tab-icon">👤</span>Профиль
+    </button>
+    <button class="tab" data-tab="agents">
+      <span class="tab-icon">🤖</span>Агенты
+    </button>
+    <button class="tab" data-tab="tasks">
+      <span class="tab-icon">📋</span>Задачи
+    </button>
+    <button class="tab" data-tab="llm">
+      <span class="tab-icon">🧠</span>LLM
+    </button>
+    <button class="tab" data-tab="api-keys">
+      <span class="tab-icon">🔑</span>API-ключи
+    </button>
+    <button class="tab" data-tab="security">
+      <span class="tab-icon">🔒</span>2FA
+    </button>
+    <button class="tab" data-tab="system">
+      <span class="tab-icon">📊</span>Мониторинг
+    </button>
+    <button class="tab" data-tab="dialogs">
+      <span class="tab-icon">💬</span>Диалоги
+    </button>
+    <button class="tab" data-tab="plugins">
+      <span class="tab-icon">🔌</span>Плагины
+    </button>
+    <button class="tab" data-tab="learning">
+      <span class="tab-icon">🎓</span>Обучение
+    </button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TAB 1: ПРОФИЛЬ
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="tab-content active" data-content="profile">
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> ЛИЧНЫЕ ДАННЫЕ
+        <div class="card-title-actions">
+          <button class="btn btn-sm btn-primary" id="profile-save">СОХРАНИТЬ</button>
+          <button class="btn btn-sm btn-danger" id="profile-reset">СБРОС</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="form-row">
+          <label class="form-label">Имя пользователя</label>
+          <input type="text" class="form-input" id="profile-username" placeholder="Пользователь">
+          <div class="form-error">Имя обязательно</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Как обращаться</label>
+          <input type="text" class="form-input" id="profile-callname" placeholder="Хозяин">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Город (для погоды)</label>
+          <input type="text" class="form-input" id="profile-city" placeholder="Riga">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="profile-email" placeholder="user@example.com">
+          <div class="form-error">Неверный формат email</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Язык</label>
+          <select class="form-select" id="profile-lang">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="lv">Latviešu</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Часовой пояс</label>
+          <select class="form-select" id="profile-tz">
+            <option value="Europe/Riga">Europe/Riga</option>
+            <option value="Europe/Moscow">Europe/Moscow</option>
+            <option value="Europe/London">Europe/London</option>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Имя ассистента</label>
+          <input type="text" class="form-input" id="profile-hotword" placeholder="Сиен">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Стиль ответов</label>
+          <select class="form-select" id="profile-style">
+            <option value="friendly">Дружелюбный</option>
+            <option value="formal">Формальный</option>
+            <option value="minimal">Минимальный</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TAB 2: АГЕНТЫ
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="tab-content" data-content="agents">
+    <div class="stats" id="agents-stats">
+      <div class="stat-item">
+        <div class="stat-value" id="agents-total">—</div>
+        <div class="stat-label">Всего</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value text-green" id="agents-online">—</div>
+        <div class="stat-label">Онлайн</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value text-dim" id="agents-offline">—</div>
+        <div class="stat-label">Офлайн</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value text-red" id="agents-errors">—</div>
+        <div class="stat-label">Ошибки</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> РЕЕСТР АГЕНТОВ
+        <div class="card-title-actions">
+          <button class="btn btn-sm" id="agents-refresh">↻ ОБНОВИТЬ</button>
+        </div>
+      </div>
+      <div class="agents-grid" id="agents-list">
+        <div class="loading">Загрузка агентов...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TAB 3: ЗАДАЧИ
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="tab-content" data-content="tasks">
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> НОВАЯ ЗАДАЧА
+      </div>
+      <div class="grid">
+        <div class="form-row">
+          <label class="form-label">Название <span class="text-red">*</span></label>
+          <input type="text" class="form-input" id="task-title" placeholder="Что нужно сделать">
+          <div class="form-error">Название обязательно</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Срок выполнения</label>
+          <input type="datetime-local" class="form-input" id="task-due">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Описание</label>
+        <textarea class="form-textarea" id="task-description" placeholder="Подробности..."></textarea>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary" id="task-create">СОЗДАТЬ</button>
+        <button class="btn" id="task-clear">ОЧИСТИТЬ</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> АКТИВНЫЕ ЗАДАЧИ
+        <div class="card-title-actions">
+          <button class="btn btn-sm" id="tasks-refresh">↻</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Название</th>
+              <th>Срок</th>
+              <th>Статус</th>
+              <th>Создано</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tasks-table-body">
+            <tr><td colspan="6" class="loading">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TAB 4: LLM
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="tab-content" data-content="llm">
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> НАСТРОЙКИ OLLAMA
+        <div class="card-title-actions">
+          <button class="btn btn-sm" id="llm-test">ТЕСТ</button>
+          <button class="btn btn-sm btn-primary" id="llm-save">СОХРАНИТЬ</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="form-row">
+          <label class="form-label">Провайдер</label>
+          <select class="form-select" id="llm-provider">
+            <option value="ollama">Ollama (локально)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Base URL</label>
+          <input type="text" class="form-input" id="llm-base-url" value="http://localhost:11434">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Модель</label>
+          <select class="form-select" id="llm-model">
+            <option value="llama3.2:3b">llama3.2:3b (по умолчанию)</option>
+          </select>
+          <div class="form-hint" id="llm-models-hint">Список обновится после «ТЕСТ»</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Temperature (0.0 – 1.0)</label>
+          <input type="number" class="form-input" id="llm-temperature"
+                 value="0.2" step="0.1" min="0" max="1">
+          <div class="form-error">От 0 до 1</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Timeout (секунды)</label>
+          <input type="number" class="form-input" id="llm-timeout"
+                 value="30" step="1" min="1" max="300">
+          <div class="form-error">От 1 до 300</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Сообщений в контексте</label>
+          <input type="number" class="form-input" id="llm-context"
+                 value="10" step="1" min="0" max="50">
+          <div class="form-hint">Сколько последних сообщений передавать в промпт</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> РЕЗУЛЬТАТ ТЕСТА
+      </div>
+      <pre id="llm-test-result" class="mono" style="color:var(--text-dim); font-size:12px; white-space:pre-wrap;">Нажми «ТЕСТ» для проверки связи с Ollama.</pre>
+    </div>
+  </div>
+
+  <!-- TAB: API-КЛЮЧИ -->
+  <div class="tab-content" data-content="api-keys">
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> ИНТЕГРАЦИИ (ключи хранятся в Кроносе, AES-256-GCM)
+      </div>
+      <p class="text-dim mb">Все ключи передаются зашифрованно. Оставь поле пустым, если интеграция не нужна.</p>
+      <div class="grid" id="secrets-grid">
+        <div class="loading">Загрузка...</div>
+      </div>
+      <div class="row mt-sm">
+        <button class="btn btn-primary" id="secrets-save">СОХРАНИТЬ ВСЕ</button>
+        <button class="btn" id="secrets-refresh">↻ ОБНОВИТЬ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: 2FA -->
+  <div class="tab-content" data-content="security">
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> ДВУХФАКТОРНАЯ АУТЕНТИФИКАЦИЯ
+      </div>
+      <div id="tfa-status" class="mb">
+        <div class="loading">Проверка...</div>
+      </div>
+      <div id="tfa-setup" class="hidden">
+        <p class="mb">Отсканируй QR-код в Google Authenticator / Authy:</p>
+        <div id="tfa-qr" class="mb" style="text-align:center;"></div>
+        <div class="form-row">
+          <label class="form-label">Код из приложения (6 цифр)</label>
+          <input type="text" class="form-input" id="tfa-code" maxlength="6" placeholder="123456">
+        </div>
+        <button class="btn btn-primary" id="tfa-verify">ПОДТВЕРДИТЬ</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary" id="tfa-enable">ВКЛЮЧИТЬ 2FA</button>
+        <button class="btn btn-danger" id="tfa-disable">ОТКЛЮЧИТЬ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: МОНИТОРИНГ -->
+  <div class="tab-content" data-content="system">
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> РЕСУРСЫ СИСТЕМЫ (обновление каждые 3 сек)
+      </div>
+      <div class="grid" id="sysstats-grid">
+        <div class="stat-item"><div class="stat-label">CPU</div><div class="stat-value" id="sys-cpu">—</div><div id="sys-cpu-bar" style="height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:0;background:var(--cyan);transition:width 0.5s;"></div></div></div>
+        <div class="stat-item"><div class="stat-label">RAM</div><div class="stat-value" id="sys-ram">—</div><div id="sys-ram-bar" style="height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:0;background:var(--cyan);transition:width 0.5s;"></div></div></div>
+        <div class="stat-item"><div class="stat-label">VRAM (GPU)</div><div class="stat-value" id="sys-vram">—</div><div id="sys-vram-bar" style="height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:0;background:var(--purple);transition:width 0.5s;"></div></div></div>
+        <div class="stat-item"><div class="stat-label">DISK</div><div class="stat-value" id="sys-disk">—</div><div id="sys-disk-bar" style="height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:0;background:var(--green);transition:width 0.5s;"></div></div></div>
+      </div>
+      <p class="text-dim mt-sm" id="sys-info">—</p>
+    </div>
+  </div>
+
+  <!-- TAB: ДИАЛОГИ -->
+  <div class="tab-content" data-content="dialogs">
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> ИСТОРИЯ ДИАЛОГОВ
+        <div class="card-title-actions">
+          <button class="btn btn-sm" id="dialogs-refresh">↻</button>
+          <button class="btn btn-sm btn-danger" id="dialogs-clear">ОЧИСТИТЬ</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Session ID (пусто = все)</label>
+        <input type="text" class="form-input" id="dialogs-session" placeholder="sess_...">
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Время</th><th>Роль</th><th>Эмоция</th><th>Агент</th><th>Текст</th></tr></thead>
+          <tbody id="dialogs-body"><tr><td colspan="5" class="loading">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: ОБУЧЕНИЕ -->
+  <div class="tab-content" data-content="learning">
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> НАУЧИТЬ НОВОЙ КОМАНДЕ
+      </div>
+      <p class="text-dim mb">Сиен запомнит фразу и будет выполнять действие при её повторении.</p>
+      <div class="grid">
+        <div class="form-row">
+          <label class="form-label">Фраза <span class="text-red">*</span></label>
+          <input type="text" class="form-input" id="learn-phrase" placeholder="утренняя проверка">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Тип действия</label>
+          <select class="form-select" id="learn-action-type">
+            <option value="nav">🔗 Открыть URL в дашборде</option>
+            <option value="plugin">🔌 Запустить плагин</option>
+            <option value="agent">🤖 Вызвать агента</option>
+            <option value="custom">⌨ Выполнить команду</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Параметры действия</label>
+        <input type="text" class="form-input" id="learn-action-data"
+               placeholder='{"url": "/dashboard/#tasks"} или текст команды'>
+        <div class="form-hint">Для nav: <code>{"url":"..."}</code>. Для agent: <code>{"agent":"wen","action":"list_tasks"}</code>. Для custom: любой текст.</div>
+      </div>
+      <button class="btn btn-primary" id="learn-save">ЗАПОМНИТЬ</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> ВЫУЧЕННЫЕ КОМАНДЫ
+        <div class="card-title-actions">
+          <button class="btn btn-sm" id="learning-refresh">↻</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Фраза</th><th>Тип</th><th>Действие</th><th>Использовано</th><th>Уверенность</th><th></th></tr></thead>
+          <tbody id="learning-body"><tr><td colspan="6" class="loading">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="tab-content" data-content="plugins">
+    <div class="stats">
+      <div class="stat-item"><div class="stat-label">Всего</div><div class="stat-value" id="plugins-total">—</div></div>
+      <div class="stat-item"><div class="stat-label">Core</div><div class="stat-value text-cyan" id="plugins-core">—</div></div>
+      <div class="stat-item"><div class="stat-label">Productivity</div><div class="stat-value" style="color:var(--purple)" id="plugins-prod">—</div></div>
+      <div class="stat-item"><div class="stat-label">Работают</div><div class="stat-value text-green" id="plugins-ok">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> CORE ПЛАГИНЫ (10)
+        <div class="card-title-actions">
+          <button class="btn btn-sm" id="plugins-refresh">↻ ОБНОВИТЬ</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Плагин</th><th>Описание</th><th>Статус</th><th>Действия</th></tr></thead>
+          <tbody id="plugins-core-body"><tr><td colspan="4" class="loading">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="title-icon">◈</span> PRODUCTIVITY ПЛАГИНЫ (10)
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Плагин</th><th>Описание</th><th>Статус</th><th>Действия</th></tr></thead>
+          <tbody id="plugins-prod-body"><tr><td colspan="4" class="loading">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="tab-content" data-content="plugins">
+    <div class="card"><div class="card-title">🔌 Плагины</div>
+      <p class="text-dim">Будет добавлено в следующем обновлении (Ответ 3).</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast контейнер -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// Сиен 3.0 Dashboard — SPA JavaScript
+// ══════════════════════════════════════════════════════════════════
+'use strict';
+
+// Базовый URL (работает и на сервере, и через file://)
+const API_BASE = (location.protocol === 'file:' || !location.host)
+  ? 'http://localhost:8000'
+  : location.origin;
+
+// ── УТИЛИТЫ ──────────────────────────────────────────────────────
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+function escapeHTML(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ── API КЛИЕНТ ───────────────────────────────────────────────────
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    mode: 'cors',
+    credentials: 'omit',
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+
+  try {
+    const r = await fetch(API_BASE + path, opts);
+    const text = await r.text();
+    const data = text ? JSON.parse(text) : null;
+    if (!r.ok) {
+      throw new Error((data && data.detail) || `HTTP ${r.status}`);
+    }
+    return data;
+  } catch (e) {
+    if (e.message && e.message.includes('Failed to fetch')) {
+      throw new Error('Нет связи с оркестратором. Запусти: python start.py');
+    }
+    throw e;
+  }
+}
+
+const API = {
+  get:    (p)    => api('GET',    p),
+  post:   (p, b) => api('POST',   p, b || {}),
+  del:    (p)    => api('DELETE', p),
+  patch:  (p, b) => api('PATCH',  p, b || {}),
+};
+
+// ── TOAST ────────────────────────────────────────────────────────
+
+function toast(title, message, type) {
+  type = type || 'info';
+  const container = $('#toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = `
+    <div class="toast-title">${escapeHTML(title)}</div>
+    <div>${escapeHTML(message || '')}</div>
+  `;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'slide-in 0.3s ease reverse';
+    setTimeout(() => el.remove(), 280);
+  }, 4000);
+}
+
+// ── ТАБЫ ─────────────────────────────────────────────────────────
+
+function initTabs() {
+  $$('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const id = tab.dataset.tab;
+      $$('.tab').forEach(t => t.classList.remove('active'));
+      $$('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      $(`[data-content="${id}"]`).classList.add('active');
+      // Сохраняем активную вкладку в URL hash
+      history.replaceState(null, '', '#' + id);
+      // Загружаем данные для активной вкладки
+      onTabActivate(id);
+    });
+  });
+
+  // Восстанавливаем активную вкладку из hash
+  const hash = location.hash.replace('#', '');
+  if (hash) {
+    const tab = $(`[data-tab="${hash}"]`);
+    if (tab) tab.click();
+  }
+}
+
+function onTabActivate(id) {
+  stopSysstats();
+  switch (id) {
+    case 'agents':   loadAgents(); break;
+    case 'tasks':    loadTasks(); break;
+    case 'profile':  loadProfile(); break;
+    case 'llm':      loadLLMSettings(); break;
+    case 'api-keys': loadSecrets(); break;
+    case 'security': load2FAStatus(); break;
+    case 'system':   startSysstats(); break;
+    case 'dialogs':  loadDialogs(); break;
+    case 'plugins':  loadPlugins(); break;
+    case 'learning': loadLearning(); break;
+  }
+}
+
+// ── ПРОВЕРКА ОРКЕСТРАТОРА ─────────────────────────────────────────
+
+async function checkOrchestrator() {
+  const badge = $('#orchestrator-badge');
+  try {
+    const r = await API.get('/health');
+    if (r && r.status === 'ok') {
+      badge.className = 'badge badge-ok';
+      badge.textContent = 'ОРКЕСТРАТОР ' + (r.version || '');
+      return true;
+    }
+  } catch (e) {
+    badge.className = 'badge badge-error';
+    badge.textContent = 'ОРКЕСТРАТОР ОФЛАЙН';
+  }
+  return false;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: ПРОФИЛЬ
+// ══════════════════════════════════════════════════════════════════
+
+const PROFILE_FIELDS = [
+  'username', 'callname', 'city', 'email',
+  'lang', 'tz', 'hotword', 'style'
+];
+
+async function loadProfile() {
+  try {
+    const data = await API.get('/dashboard/api/profile/load');
+    PROFILE_FIELDS.forEach(key => {
+      const el = $('#profile-' + key);
+      if (el && data[key] !== undefined) el.value = data[key] || '';
+    });
+  } catch (e) {
+    toast('Ошибка загрузки профиля', e.message, 'error');
+  }
+}
+
+function validateProfile() {
+  let ok = true;
+  $$('.tab-content[data-content="profile"] .form-row').forEach(r => r.classList.remove('error'));
+
+  const username = $('#profile-username').value.trim();
+  if (!username) {
+    $('#profile-username').closest('.form-row').classList.add('error');
+    ok = false;
+  }
+
+  const email = $('#profile-email').value.trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    $('#profile-email').closest('.form-row').classList.add('error');
+    ok = false;
+  }
+
+  return ok;
+}
+
+async function saveProfile() {
+  if (!validateProfile()) {
+    toast('Ошибка валидации', 'Проверь поля с красной рамкой', 'error');
+    return;
+  }
+  const data = {};
+  PROFILE_FIELDS.forEach(key => {
+    data[key] = $('#profile-' + key).value.trim();
+  });
+  try {
+    await API.post('/dashboard/api/profile/save', data);
+    toast('Сохранено', 'Профиль обновлён', 'success');
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+async function resetProfile() {
+  if (!confirm('Сбросить все настройки профиля?')) return;
+  try {
+    await API.post('/dashboard/api/profile/reset');
+    PROFILE_FIELDS.forEach(key => { $('#profile-' + key).value = ''; });
+    toast('Сброшено', 'Профиль очищен', 'success');
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: АГЕНТЫ
+// ══════════════════════════════════════════════════════════════════
+
+const AGENT_ROLES = {
+  orchestrator: 'Оркестратор',
+  cronos: 'Хранитель секретов', ahill: 'Защитник VPS',
+  fenix: 'Парсер намерений', logos: 'Оформление', wen: 'Секретарь',
+  kun: 'Профессор', master: 'Тренер', plutos: 'Инвестор',
+  musa: 'Контент', kallio: 'Медиа', hefest: 'Код', avto: 'Макросы',
+  huei: 'Изображения', meng: 'Длинные видео', eho: 'Озвучка',
+  irida: 'Telegram', apollo: 'Видеомейкер', hermes: 'Affiliate',
+  dike: 'Бухгалтер', mnemon: 'Переводчик', argus: 'Монитор',
+};
+
+async function loadAgents() {
+  const listEl = $('#agents-list');
+  listEl.innerHTML = '<div class="loading">Загрузка...</div>';
+  try {
+    const data = await API.get('/agents/list');
+    const agents = data.agents || {};
+    const entries = Object.entries(agents);
+
+    // Параллельно пингуем health каждого
+    const statuses = await Promise.all(entries.map(async ([name, url]) => {
+      try {
+        await fetch(API_BASE + '/agents/list', { mode: 'cors' }); // прогрев
+        // Нет отдельного health-проксирования, используем общий агрегатор
+        return 'unknown';
+      } catch {
+        return 'offline';
+      }
+    }));
+
+    // Рендерим карточки
+    listEl.innerHTML = '';
+    let online = 0, offline = 0, errors = 0;
+    entries.forEach(([name, url], i) => {
+      const status = statuses[i];
+      if (status === 'ok') online++;
+      else if (status === 'offline') offline++;
+      else if (status === 'error') errors++;
+
+      const card = document.createElement('div');
+      card.className = 'agent-card status-' + status;
+      card.innerHTML = `
+        <div class="agent-card-name">${escapeHTML(name.toUpperCase())}</div>
+        <div class="agent-card-role">${escapeHTML(AGENT_ROLES[name] || 'Агент')}</div>
+        <div class="agent-card-url">${escapeHTML(url)}</div>
+        <span class="badge badge-${status === 'ok' ? 'ok' : 'offline'}">${status.toUpperCase()}</span>
+      `;
+      listEl.appendChild(card);
+    });
+
+    $('#agents-total').textContent = entries.length;
+    $('#agents-online').textContent = online;
+    $('#agents-offline').textContent = entries.length - online - errors;
+    $('#agents-errors').textContent = errors;
+  } catch (e) {
+    listEl.innerHTML = `<div class="empty">Ошибка: ${escapeHTML(e.message)}</div>`;
+    toast('Агенты', e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: ЗАДАЧИ
+// ══════════════════════════════════════════════════════════════════
+
+async function loadTasks() {
+  const tbody = $('#tasks-table-body');
+  tbody.innerHTML = '<tr><td colspan="6" class="loading">Загрузка...</td></tr>';
+  try {
+    const tasks = await API.get('/tasks/list');
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Задач нет</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    tasks.forEach(t => {
+      const row = document.createElement('tr');
+      const statusBadge = t.status === 'done'
+        ? '<span class="badge badge-ok">ГОТОВО</span>'
+        : '<span class="badge badge-warning">PENDING</span>';
+      row.innerHTML = `
+        <td class="mono">#${t.id}</td>
+        <td>${escapeHTML(t.title || '')}</td>
+        <td class="mono">${escapeHTML(t.due || '—')}</td>
+        <td>${statusBadge}</td>
+        <td class="mono text-dim">${escapeHTML((t.created_at || '').slice(0,16))}</td>
+        <td><button class="btn btn-sm btn-danger" data-del="${t.id}">УДАЛИТЬ</button></td>
+      `;
+      tbody.appendChild(row);
+    });
+    // Привязываем обработчики удаления
+    tbody.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => deleteTask(btn.dataset.del));
+    });
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">Ошибка: ${escapeHTML(e.message)}</td></tr>`;
+  }
+}
+
+function validateTask() {
+  let ok = true;
+  $$('.tab-content[data-content="tasks"] .form-row').forEach(r => r.classList.remove('error'));
+  if (!$('#task-title').value.trim()) {
+    $('#task-title').closest('.form-row').classList.add('error');
+    ok = false;
+  }
+  return ok;
+}
+
+async function createTask() {
+  if (!validateTask()) {
+    toast('Ошибка', 'Название задачи обязательно', 'error');
+    return;
+  }
+  const body = {
+    title: $('#task-title').value.trim(),
+    due: $('#task-due').value || null,
+    description: $('#task-description').value.trim() || null,
+  };
+  try {
+    const r = await API.post('/tasks/create', body);
+    toast('Задача создана', `#${r.id}: ${body.title}`, 'success');
+    clearTaskForm();
+    loadTasks();
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+function clearTaskForm() {
+  $('#task-title').value = '';
+  $('#task-due').value = '';
+  $('#task-description').value = '';
+  $$('.tab-content[data-content="tasks"] .form-row').forEach(r => r.classList.remove('error'));
+}
+
+async function deleteTask(id) {
+  if (!confirm(`Удалить задачу #${id}?`)) return;
+  try {
+    await API.del(`/tasks/delete/${id}`);
+    toast('Удалено', `Задача #${id}`, 'success');
+    loadTasks();
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: LLM
+// ══════════════════════════════════════════════════════════════════
+
+async function loadLLMSettings() {
+  try {
+    const data = await API.get('/dashboard/api/profile/load');
+    if (data.llm_base_url) $('#llm-base-url').value = data.llm_base_url;
+    if (data.llm_model) {
+      const sel = $('#llm-model');
+      // Добавим модель если её нет в списке
+      if (![...sel.options].find(o => o.value === data.llm_model)) {
+        const opt = document.createElement('option');
+        opt.value = data.llm_model;
+        opt.textContent = data.llm_model;
+        sel.appendChild(opt);
+      }
+      sel.value = data.llm_model;
+    }
+    if (data.llm_temperature !== undefined) $('#llm-temperature').value = data.llm_temperature;
+    if (data.llm_timeout !== undefined) $('#llm-timeout').value = data.llm_timeout;
+    if (data.llm_context !== undefined) $('#llm-context').value = data.llm_context;
+  } catch (e) {
+    // Тихо, это не критично
+  }
+}
+
+function validateLLM() {
+  let ok = true;
+  $$('.tab-content[data-content="llm"] .form-row').forEach(r => r.classList.remove('error'));
+
+  const temp = parseFloat($('#llm-temperature').value);
+  if (isNaN(temp) || temp < 0 || temp > 1) {
+    $('#llm-temperature').closest('.form-row').classList.add('error');
+    ok = false;
+  }
+  const timeout = parseInt($('#llm-timeout').value);
+  if (isNaN(timeout) || timeout < 1 || timeout > 300) {
+    $('#llm-timeout').closest('.form-row').classList.add('error');
+    ok = false;
+  }
+  return ok;
+}
+
+async function saveLLMSettings() {
+  if (!validateLLM()) {
+    toast('Ошибка', 'Проверь значения', 'error');
+    return;
+  }
+  const data = {
+    llm_base_url: $('#llm-base-url').value.trim(),
+    llm_model: $('#llm-model').value,
+    llm_temperature: parseFloat($('#llm-temperature').value),
+    llm_timeout: parseInt($('#llm-timeout').value),
+    llm_context: parseInt($('#llm-context').value),
+  };
+  try {
+    await API.post('/dashboard/api/profile/save', data);
+    toast('Сохранено', 'Настройки LLM обновлены', 'success');
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+async function testLLM() {
+  const pre = $('#llm-test-result');
+  pre.style.color = 'var(--text-dim)';
+  pre.textContent = 'Проверяю связь с Ollama...';
+
+  const baseUrl = $('#llm-base-url').value.trim();
+
+  try {
+    // Проверяем Ollama напрямую через /api/tags (no-cors fallback через фетч)
+    const r = await fetch(baseUrl + '/api/tags', { mode: 'cors' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const models = (data.models || []).map(m => m.name);
+
+    // Обновляем selector моделей
+    const sel = $('#llm-model');
+    const currentValue = sel.value;
+    sel.innerHTML = '';
+    if (models.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = 'llama3.2:3b';
+      opt.textContent = 'Модели не установлены';
+      sel.appendChild(opt);
+    } else {
+      models.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        sel.appendChild(opt);
+      });
+      if (models.includes(currentValue)) sel.value = currentValue;
+    }
+
+    pre.style.color = 'var(--green)';
+    pre.textContent = `✓ Ollama доступна\n\nМоделей: ${models.length}\n${models.map(m => '  • ' + m).join('\n')}`;
+    toast('Ollama', `Найдено моделей: ${models.length}`, 'success');
+  } catch (e) {
+    pre.style.color = 'var(--red)';
+    pre.textContent = `✗ Ollama недоступна\n\n${e.message}\n\nЗапусти: ollama serve\nИ скачай модель: ollama pull llama3.2:3b`;
+    toast('Ollama', 'Не удалось подключиться', 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: API-КЛЮЧИ
+// ══════════════════════════════════════════════════════════════════
+
+const SECRET_FIELDS = [
+  { key: 'openweather_api_key', label: 'OpenWeather API Key', type: 'password' },
+  { key: 'telegram_bot_token', label: 'Telegram Bot Token', type: 'password' },
+  { key: 'telegram_chat_id', label: 'Telegram Chat ID', type: 'text' },
+  { key: 'telegram_api_id', label: 'Telegram API ID (Telethon)', type: 'text' },
+  { key: 'telegram_api_hash', label: 'Telegram API Hash (Telethon)', type: 'password' },
+  { key: 'vk_access_token', label: 'VK Access Token', type: 'password' },
+  { key: 'tinkoff_invest_token', label: 'Тинькофф Invest Token', type: 'password' },
+  { key: 'tinkoff_account_id', label: 'Тинькофф Account ID', type: 'text' },
+  { key: 'binance_api_key', label: 'Binance API Key', type: 'password' },
+  { key: 'binance_secret_key', label: 'Binance Secret Key', type: 'password' },
+  { key: 'google_calendar_token', label: 'Google Calendar Token', type: 'password' },
+  { key: 'yandex_metrika_token', label: 'Яндекс.Метрика Token', type: 'password' },
+  { key: 'yandex_metrika_counter_id', label: 'Яндекс.Метрика Counter ID', type: 'text' },
+];
+
+async function loadSecrets() {
+  const grid = $('#secrets-grid');
+  grid.innerHTML = '';
+  let existing = {};
+  try {
+    const r = await API.get('/dashboard/api/secrets/list');
+    existing = r.keys || {};
+  } catch (e) { /* не критично */ }
+
+  SECRET_FIELDS.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'form-row';
+    const hasValue = existing[f.key];
+    row.innerHTML = `
+      <label class="form-label">${escapeHTML(f.label)}${hasValue ? ' <span class="text-green">✓ задан</span>' : ''}</label>
+      <input type="${f.type}" class="form-input" data-secret="${f.key}"
+             placeholder="${hasValue ? '••• оставь пустым чтобы не менять •••' : 'не задано'}">
+    `;
+    grid.appendChild(row);
+  });
+}
+
+async function saveSecrets() {
+  const updates = [];
+  $$('[data-secret]').forEach(inp => {
+    const val = inp.value.trim();
+    if (val) updates.push({ key: inp.dataset.secret, value: val });
+  });
+  if (!updates.length) {
+    toast('Нет изменений', 'Все поля пусты', 'warning');
+    return;
+  }
+  try {
+    for (const u of updates) {
+      await API.post('/dashboard/api/secrets/set', u);
+    }
+    toast('Сохранено', `Обновлено ключей: ${updates.length}`, 'success');
+    $$('[data-secret]').forEach(inp => inp.value = '');
+    loadSecrets();
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: 2FA
+// ══════════════════════════════════════════════════════════════════
+
+async function load2FAStatus() {
+  const el = $('#tfa-status');
+  try {
+    const r = await API.get('/dashboard/api/2fa/status');
+    if (r.enabled) {
+      el.innerHTML = '<span class="badge badge-ok">2FA ВКЛЮЧЕНА</span>';
+    } else {
+      el.innerHTML = '<span class="badge badge-offline">2FA ВЫКЛЮЧЕНА</span>';
+    }
+  } catch (e) {
+    el.innerHTML = '<span class="badge badge-error">Недоступно</span>';
+  }
+}
+
+async function enable2FA() {
+  try {
+    const r = await API.post('/dashboard/api/2fa/setup');
+    if (r.qr_png_base64) {
+      $('#tfa-qr').innerHTML = `<img src="data:image/png;base64,${r.qr_png_base64}" style="max-width:280px;border:1px solid var(--border);border-radius:4px;">`;
+      $('#tfa-setup').classList.remove('hidden');
+      toast('QR готов', 'Отсканируй и введи код', 'info');
+    }
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+async function verify2FA() {
+  const code = $('#tfa-code').value.trim();
+  if (!/^\d{6}$/.test(code)) {
+    toast('Ошибка', 'Нужно 6 цифр', 'error');
+    return;
+  }
+  try {
+    await API.post('/dashboard/api/2fa/verify', { code });
+    toast('Успех', '2FA активирована', 'success');
+    $('#tfa-setup').classList.add('hidden');
+    $('#tfa-code').value = '';
+    load2FAStatus();
+  } catch (e) {
+    toast('Неверный код', e.message, 'error');
+  }
+}
+
+async function disable2FA() {
+  if (!confirm('Отключить 2FA?')) return;
+  try {
+    await API.post('/dashboard/api/2fa/disable');
+    toast('2FA', 'Отключена', 'success');
+    load2FAStatus();
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: МОНИТОРИНГ
+// ══════════════════════════════════════════════════════════════════
+
+let sysstatsTimer = null;
+
+function setSysBar(id, pct) {
+  const bar = $('#' + id + '-bar').firstElementChild;
+  bar.style.width = Math.min(100, pct) + '%';
+  bar.style.background = pct > 90 ? 'var(--red)' : pct > 70 ? 'var(--yellow)' : 'var(--cyan)';
+}
+
+async function refreshSysStats() {
+  try {
+    const d = await API.get('/dashboard/api/system/stats');
+    $('#sys-cpu').textContent = (d.cpu_percent || 0).toFixed(1) + '%';
+    setSysBar('sys-cpu', d.cpu_percent || 0);
+
+    $('#sys-ram').textContent = (d.ram_percent || 0).toFixed(1) + '%';
+    setSysBar('sys-ram', d.ram_percent || 0);
+
+    if (d.gpu) {
+      $('#sys-vram').textContent = (d.gpu.vram_percent || 0).toFixed(1) + '%';
+      setSysBar('sys-vram', d.gpu.vram_percent || 0);
+    } else {
+      $('#sys-vram').textContent = 'N/A';
+    }
+
+    $('#sys-disk').textContent = (d.disk_percent || 0).toFixed(1) + '%';
+    setSysBar('sys-disk', d.disk_percent || 0);
+
+    $('#sys-info').textContent = `RAM: ${(d.ram_used_gb||0).toFixed(1)}/${(d.ram_total_gb||0).toFixed(1)} ГБ · Disk: ${(d.disk_used_gb||0).toFixed(0)}/${(d.disk_total_gb||0).toFixed(0)} ГБ`;
+  } catch (e) {
+    $('#sys-info').textContent = 'Ошибка: ' + e.message;
+  }
+}
+
+function startSysstats() {
+  refreshSysStats();
+  stopSysstats();
+  sysstatsTimer = setInterval(refreshSysStats, 3000);
+}
+function stopSysstats() {
+  if (sysstatsTimer) { clearInterval(sysstatsTimer); sysstatsTimer = null; }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: ДИАЛОГИ
+// ══════════════════════════════════════════════════════════════════
+
+async function loadDialogs() {
+  const tbody = $('#dialogs-body');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading">Загрузка...</td></tr>';
+  const sid = $('#dialogs-session').value.trim();
+  const qs = sid ? `?session_id=${encodeURIComponent(sid)}&limit=50` : '?limit=50';
+  try {
+    const r = await API.get('/dashboard/api/conversations' + qs);
+    const items = r.items || r.conversations || [];
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">Диалогов нет</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    items.forEach(m => {
+      const tr = document.createElement('tr');
+      const ts = m.timestamp ? new Date(m.timestamp * 1000).toLocaleString('ru') : '—';
+      tr.innerHTML = `
+        <td class="mono text-dim">${escapeHTML(ts)}</td>
+        <td>${escapeHTML(m.role || '—')}</td>
+        <td>${escapeHTML(m.emotion || '—')}</td>
+        <td class="text-cyan">${escapeHTML(m.agent || '—')}</td>
+        <td>${escapeHTML((m.text || '').slice(0, 200))}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">Ошибка: ${escapeHTML(e.message)}</td></tr>`;
+  }
+}
+
+async function clearDialogs() {
+  if (!confirm('Очистить всю историю диалогов? Это необратимо.')) return;
+  try {
+    await API.post('/dashboard/api/conversations/clear');
+    toast('Очищено', 'История удалена', 'success');
+    loadDialogs();
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: ПЛАГИНЫ
+// ══════════════════════════════════════════════════════════════════
+
+const PLUGINS_CORE = [
+  { name: 'weather',      desc: 'Погода (OpenWeatherMap, кэш 5 мин)' },
+  { name: 'news',         desc: 'RSS новости (Habr, 3DNews, BBC, N+1)' },
+  { name: 'tasks',        desc: 'Локальные задачи с приоритетами' },
+  { name: 'notes',        desc: 'Заметки с тегами и поиском' },
+  { name: 'calendar',     desc: 'Календарь с парсингом "сегодня 15:00"' },
+  { name: 'scheduler',    desc: 'Фоновый планировщик напоминаний' },
+  { name: 'settings',     desc: 'Глобальные настройки системы' },
+  { name: 'logger',       desc: 'Логгер в файл с уровнями' },
+  { name: 'cache_helper', desc: 'Кэш в памяти с TTL' },
+  { name: 'sentiment',    desc: 'Анализ тональности (positive/negative/neutral)' },
+];
+
+const PLUGINS_PROD = [
+  { name: 'kanban',              desc: 'Канбан-доска (todo/progress/done)' },
+  { name: 'eisenhower_matrix',   desc: 'Матрица Эйзенхауэра (4 квадранта)' },
+  { name: 'project_kanban',      desc: 'Множественные проекты с досками' },
+  { name: 'macros',              desc: 'Макросы команд (фоновые потоки)' },
+  { name: 'goals',               desc: 'Цели с автопрогрессом подзадач' },
+  { name: 'routines',            desc: 'Ежедневные и еженедельные рутины' },
+  { name: 'productivity_stats',  desc: 'Статистика за 7 дней' },
+  { name: 'focus_mode',          desc: 'Режим фокусировки с таймером' },
+  { name: 'daily_planner',       desc: 'План дня по часовым слотам' },
+  { name: 'habit_checklist',     desc: 'Чек-лист привычек со streak' },
+];
+
+async function loadPlugins() {
+  const renderRow = (category, p, tbody) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="mono text-cyan">${escapeHTML(p.name)}</td>
+      <td>${escapeHTML(p.desc)}</td>
+      <td><span class="badge badge-offline" data-status="${category}-${p.name}">?</span></td>
+      <td><button class="btn btn-sm" data-test="${category}-${p.name}">ТЕСТ</button></td>
+    `;
+    tbody.appendChild(tr);
+  };
+
+  const coreBody = $('#plugins-core-body');
+  const prodBody = $('#plugins-prod-body');
+  coreBody.innerHTML = '';
+  prodBody.innerHTML = '';
+  PLUGINS_CORE.forEach(p => renderRow('core', p, coreBody));
+  PLUGINS_PROD.forEach(p => renderRow('productivity', p, prodBody));
+
+  // Статистика
+  $('#plugins-total').textContent = PLUGINS_CORE.length + PLUGINS_PROD.length;
+  $('#plugins-core').textContent = PLUGINS_CORE.length;
+  $('#plugins-prod').textContent = PLUGINS_PROD.length;
+
+  // Проверка фактического наличия через API
+  try {
+    const r = await API.get('/dashboard/api/plugins/list');
+    let okCount = 0;
+    if (r.plugins) {
+      r.plugins.forEach(p => {
+        const badge = $(`[data-status="${p.category}-${p.name}"]`);
+        if (badge) {
+          if (p.loaded) {
+            badge.className = 'badge badge-ok';
+            badge.textContent = 'OK';
+            okCount++;
+          } else {
+            badge.className = 'badge badge-error';
+            badge.textContent = 'FAIL';
+          }
+        }
+      });
+    }
+    $('#plugins-ok').textContent = okCount;
+  } catch (e) {
+    $('#plugins-ok').textContent = '—';
+    toast('Плагины', 'Сервер недоступен: ' + e.message, 'warning');
+  }
+
+  // Кнопки ТЕСТ
+  $$('[data-test]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const [cat, name] = btn.dataset.test.split('-').slice(0, 2);
+      const fullName = btn.dataset.test.replace(cat + '-', '');
+      btn.disabled = true;
+      btn.textContent = '...';
+      try {
+        const r = await API.post('/dashboard/api/plugins/test', {
+          category: cat, name: fullName,
+        });
+        toast('Тест ' + fullName, r.ok ? 'Успешно' : r.error || 'Ошибка', r.ok ? 'success' : 'error');
+      } catch (e) {
+        toast('Ошибка', e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'ТЕСТ';
+      }
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ВКЛАДКА: ОБУЧЕНИЕ
+// ══════════════════════════════════════════════════════════════════
+
+async function loadLearning() {
+  const tbody = $('#learning-body');
+  tbody.innerHTML = '<tr><td colspan="6" class="loading">Загрузка...</td></tr>';
+  try {
+    const r = await API.get('/dashboard/api/learning/list');
+    const items = r.items || [];
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Сиен пока ничему не научился. Скажи ему команду, которую он не знает — и выбери действие из предложений в HUD.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    items.forEach(it => {
+      const tr = document.createElement('tr');
+      const conf = (it.confidence || 0).toFixed(2);
+      const confColor = conf >= 0.7 ? 'text-green' : conf >= 0.4 ? 'text-cyan' : 'text-red';
+      tr.innerHTML = `
+        <td class="mono text-cyan">${escapeHTML(it.phrase)}</td>
+        <td>${escapeHTML(it.action_type)}</td>
+        <td class="mono text-dim">${escapeHTML(JSON.stringify(it.action_data).slice(0,60))}</td>
+        <td>${it.uses_count}×</td>
+        <td class="${confColor}">${conf}</td>
+        <td><button class="btn btn-sm btn-danger" data-forget="${it.id}">ЗАБЫТЬ</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('[data-forget]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Удалить эту выученную команду?')) return;
+        try {
+          await API.del('/dashboard/api/learning/' + btn.dataset.forget);
+          toast('Забыто', 'Команда удалена', 'success');
+          loadLearning();
+        } catch (e) { toast('Ошибка', e.message, 'error'); }
+      });
+    });
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">Ошибка: ${escapeHTML(e.message)}</td></tr>`;
+  }
+}
+
+async function saveLearning() {
+  const phrase = $('#learn-phrase').value.trim();
+  const actionType = $('#learn-action-type').value;
+  let actionData = $('#learn-action-data').value.trim();
+  if (!phrase) { toast('Ошибка', 'Фраза обязательна', 'error'); return; }
+
+  // Попробуем распарсить как JSON, иначе обернём как {text: ...}
+  let parsed = {};
+  try {
+    parsed = JSON.parse(actionData);
+  } catch {
+    parsed = actionType === 'custom' ? { text: actionData } : { url: actionData };
+  }
+
+  try {
+    await API.post('/dashboard/api/learning/learn', {
+      phrase, action_type: actionType, action_data: parsed,
+    });
+    toast('Запомнил', `«${phrase}» сохранено`, 'success');
+    $('#learn-phrase').value = '';
+    $('#learn-action-data').value = '';
+    loadLearning();
+  } catch (e) {
+    toast('Ошибка', e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  initTabs();
+  checkOrchestrator();
+
+  // Профиль
+  $('#profile-save').addEventListener('click', saveProfile);
+  $('#profile-reset').addEventListener('click', resetProfile);
+  loadProfile();
+
+  // Агенты
+  $('#agents-refresh').addEventListener('click', loadAgents);
+
+  // Задачи
+  $('#task-create').addEventListener('click', createTask);
+  $('#task-clear').addEventListener('click', clearTaskForm);
+  $('#tasks-refresh').addEventListener('click', loadTasks);
+
+  // LLM
+  $('#llm-save').addEventListener('click', saveLLMSettings);
+  $('#llm-test').addEventListener('click', testLLM);
+
+  // API-ключи
+  $('#secrets-save').addEventListener('click', saveSecrets);
+  $('#secrets-refresh').addEventListener('click', loadSecrets);
+
+  // 2FA
+  $('#tfa-enable').addEventListener('click', enable2FA);
+  $('#tfa-verify').addEventListener('click', verify2FA);
+  $('#tfa-disable').addEventListener('click', disable2FA);
+
+  // Диалоги
+  $('#dialogs-refresh').addEventListener('click', loadDialogs);
+  $('#dialogs-clear').addEventListener('click', clearDialogs);
+  $('#dialogs-session').addEventListener('keydown', e => {
+    if (e.key === 'Enter') loadDialogs();
+  });
+
+  // Плагины
+  $('#plugins-refresh').addEventListener('click', loadPlugins);
+
+  // Обучение
+  $('#learn-save').addEventListener('click', saveLearning);
+  $('#learning-refresh').addEventListener('click', loadLearning);
+
+  // Глобальные хоткеи
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 's') {
+      e.preventDefault();
+      const activeTab = $('.tab.active').dataset.tab;
+      if (activeTab === 'profile') saveProfile();
+      else if (activeTab === 'llm') saveLLMSettings();
+      else if (activeTab === 'api-keys') saveSecrets();
+    }
+    if (e.key === 'Escape') {
+      // Закрываем setup-блоки
+      $('#tfa-setup').classList.add('hidden');
+    }
+  });
+
+  // Глобальное обновление
+  $('#btn-refresh-all').addEventListener('click', () => {
+    checkOrchestrator();
+    const activeTab = $('.tab.active').dataset.tab;
+    onTabActivate(activeTab);
+    toast('Обновлено', 'Данные перезагружены', 'success');
+  });
+});
+</script>
+
+</body>
+</html>
