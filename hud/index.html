@@ -7,9 +7,21 @@
 <title>СИЕН — HUD v3.0</title>
 
 <!-- PWA -->
-<link rel="manifest" href="/static/manifest.json" />
-<link rel="icon" type="image/png" href="/static/icon-192.png" />
-<link rel="apple-touch-icon" href="/static/icon-192.png" />
+<link rel="manifest" href="/static/manifest.json" id="manifest-link" />
+<link rel="icon" type="image/png" href="/static/icon-192.png" id="favicon-link" />
+<link rel="apple-touch-icon" href="/static/icon-192.png" id="apple-icon-link" />
+
+<script>
+// Исправление путей к ресурсам при открытии через file://
+(function() {
+  if (location.protocol === 'file:') {
+    const baseUrl = 'http://localhost:8000/static/';
+    document.getElementById('manifest-link').href = baseUrl + 'manifest.json';
+    document.getElementById('favicon-link').href = baseUrl + 'icon-192.png';
+    document.getElementById('apple-icon-link').href = baseUrl + 'icon-192.png';
+  }
+})();
+</script>
 
 <noscript></noscript>
 <link rel="stylesheet" href="style.css" />
@@ -180,7 +192,7 @@
 
 <!-- PWA Service Worker -->
 <script>
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/static/service-worker.js').catch(() => {});
   });
