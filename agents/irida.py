@@ -1,17 +1,16 @@
 """
-
-# ── Сиен 3.0.0 patch: абсолютные пути ──
-from pathlib import Path as _WenPath
-_BASE_DIR = _WenPath(__file__).resolve().parent.parent
-_DATA_DIR = _BASE_DIR / "data"
-_DATA_DIR.mkdir(parents=True, exist_ok=True)
-
 Агент 'Ирида' (Telegram) — постинг и управление через Telegram Bot API.
 Этап 4 проекта 'Сиен 01'.
 
 Токен бота получает из агента Кронос (если доступен) или из env TELEGRAM_BOT_TOKEN.
 Поддерживает: отправку текста, фото, документов; управление чатами; вебхук.
 """
+
+# ── Сиен 3.0.0 patch: абсолютные пути ──
+from pathlib import Path as _WenPath
+_BASE_DIR = _WenPath(__file__).resolve().parent.parent
+_DATA_DIR = _BASE_DIR / "data"
+_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 import os, logging, sqlite3, asyncio
 from pathlib import Path

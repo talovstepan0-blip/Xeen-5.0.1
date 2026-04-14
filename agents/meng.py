@@ -1,17 +1,16 @@
 """
-
-# ── Сиен 3.0.0 patch: абсолютные пути ──
-from pathlib import Path as _WenPath
-_BASE_DIR = _WenPath(__file__).resolve().parent.parent
-_DATA_DIR = _BASE_DIR / "data"
-_DATA_DIR.mkdir(parents=True, exist_ok=True)
-
 Агент 'Мэн' (Видео длинные) — генерация длинного видео (HunyuanVideo/CogVideoX).
 Этап 4 проекта 'Сиен 01'.
 
 Требует: NVIDIA A100/H100 с ≥40GB VRAM или облачный GPU.
 В текущей версии — полноценная заглушка с инструкцией по развёртыванию.
 """
+
+# ── Сиен 3.0.0 patch: абсолютные пути ──
+from pathlib import Path as _WenPath
+_BASE_DIR = _WenPath(__file__).resolve().parent.parent
+_DATA_DIR = _BASE_DIR / "data"
+_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 import os, logging, sqlite3, time
 from pathlib import Path

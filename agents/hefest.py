@@ -1,17 +1,16 @@
 """
-
-# ── Сиен 3.0.0 patch: абсолютные пути ──
-from pathlib import Path as _WenPath
-_BASE_DIR = _WenPath(__file__).resolve().parent.parent
-_DATA_DIR = _BASE_DIR / "data"
-_DATA_DIR.mkdir(parents=True, exist_ok=True)
-
 Агент 'Гефест' (Генерация кода) — написание и отладка кода через Ollama.
 Этап 4 проекта 'Сиен 01'.
 
 Модель по умолчанию: deepseek-coder (или любая через env CODEGEN_MODEL).
 Поддерживает итеративную отладку: передаёт ошибку обратно в LLM.
 """
+
+# ── Сиен 3.0.0 patch: абсолютные пути ──
+from pathlib import Path as _WenPath
+_BASE_DIR = _WenPath(__file__).resolve().parent.parent
+_DATA_DIR = _BASE_DIR / "data"
+_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 import os, sqlite3, logging, re
 from datetime import datetime
