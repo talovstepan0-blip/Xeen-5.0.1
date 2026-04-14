@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#050a0f" />
+<title>СИЕН — HUD v3.0</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/static/manifest.json" />
+<link rel="icon" type="image/png" href="/static/icon-192.png" />
+<link rel="apple-touch-icon" href="/static/icon-192.png" />
+
+<noscript></noscript>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ── ФОН ────────────────────── -->
+<div class="bg-grid"></div>
+<div class="scanline"></div>
+<canvas id="matrix-rain"></canvas>
+
+<!-- ── ГЛАВНЫЙ КОНТЕЙНЕР ─────── -->
+<div class="hud-wrapper">
+
+  <!-- HEADER -->
+  <header class="hud-header">
+    <div class="logo">
+      <span class="logo-main">СИЕН</span>
+      <span class="logo-sub">SYSTEM // v3.0.0</span>
+    </div>
+    <div class="header-right">
+      <a href="/dashboard/" class="btn-reset-ctx" style="text-decoration:none;" title="Панель управления">⚙ ДАШБОРД</a>
+      <button class="btn-reset-ctx" id="btn-reset-ctx" title="Создать новый диалог">↻ СБРОСИТЬ КОНТЕКСТ</button>
+      <button class="btn-reset-ctx" id="btn-agents-drawer" title="Показать агентов">◈ АГЕНТЫ</button>
+      <div class="ws-badge" id="ws-badge">
+        <span class="ws-dot"></span>
+        <span id="ws-label">DISCONNECTED</span>
+      </div>
+      <div class="clock" id="clock">00:00:00</div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="hud-main">
+
+    <!-- ЛОГ -->
+    <section class="panel log-panel">
+      <div class="panel-title">
+        <span class="panel-icon">◈</span> СИСТЕМНЫЙ ЛОГ
+        <button class="btn-clear" id="btn-clear">ОЧИСТИТЬ</button>
+      </div>
+      <div class="log-output" id="log-output">
+        <div class="log-line log-system">
+          <span class="log-time">--:--:--</span>
+          <span class="log-tag">[СИЕН]</span>
+          <span class="log-msg">Инициализация HUD 3.0...</span>
+        </div>
+      </div>
+    </section>
+
+    </main>
+
+  <!-- FOOTER -->
+  <footer class="hud-footer">
+    <div class="input-wrapper">
+      <span class="input-prompt">СИЕН &gt;</span>
+      <input
+        type="text"
+        id="cmd-input"
+        class="cmd-input"
+        placeholder="Введи команду или запрос... (? для помощи, Esc — закрыть)"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="btn-voice" id="btn-voice" title="Голосовой ввод">🎤</button>
+      <button class="btn-help" id="btn-help" title="Помощь">?</button>
+      <button class="btn-send" id="btn-send">ОТПРАВИТЬ ⏎</button>
+    </div>
+    <div class="status-bar">
+      <span id="proxy-status">🛡️ Прокси: —</span>
+      <span id="latency-status">⚡ Задержка: —</span>
+      <span id="active-agent">🤖 Агент: —</span>
+      <span id="emotion-status">😐 Эмоция: —</span>
+      <span id="session-status">🔑 Сессия: —</span>
+      <span id="voice-status" style="display:none;">🔴 Слушаю...</span>
+    </div>
+  </footer>
+
+
+  <!-- ВЫДВИГАЕМАЯ ПАНЕЛЬ АГЕНТОВ (drawer) -->
+  <aside class="agents-drawer" id="agents-drawer" hidden>
+    <div class="drawer-header">
+      <span class="drawer-title">◈ АГЕНТЫ <span class="panel-count" id="agents-count">0 / 0</span></span>
+      <button class="drawer-close" id="drawer-close">✕</button>
+    </div>
+    <div class="agents-grid" id="agents-grid"></div>
+  </aside>
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+</div>
+
+<!-- УВЕДОМЛЕНИЕ -->
+<div class="notification" id="notification" hidden>
+  <div class="notif-icon">⏰</div>
+  <div class="notif-body">
+    <div class="notif-title" id="notif-title">Напоминание</div>
+    <div class="notif-msg" id="notif-msg"></div>
+  </div>
+  <button class="notif-close" id="notif-close">✕</button>
+</div>
+
+<!-- HELP MODAL -->
+<div class="help-modal" id="help-modal" hidden>
+  <div class="help-content">
+    <div class="help-header">
+      <span class="help-title">◈ СПРАВОЧНИК КОМАНД СИЕН v3.0</span>
+      <button class="help-close" id="help-close">✕</button>
+    </div>
+    <div class="help-body">
+      <div class="help-section">
+        <div class="help-section-title">⏰ ВРЕМЯ И ДАТА</div>
+        <div class="help-cmd"><span class="hcmd">время</span><span class="hdesc">Текущее время</span></div>
+        <div class="help-cmd"><span class="hcmd">дата</span><span class="hdesc">Полная дата</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">🌤 ПОГОДА</div>
+        <div class="help-cmd"><span class="hcmd">погода</span><span class="hdesc">Погода в твоём городе</span></div>
+        <div class="help-cmd"><span class="hcmd">погода Москва</span><span class="hdesc">Любой город</span></div>
+        <div class="help-cmd"><span class="hcmd">прогноз на 5 дней</span><span class="hdesc">Прогноз</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">📰 НОВОСТИ</div>
+        <div class="help-cmd"><span class="hcmd">новости</span><span class="hdesc">Последние новости</span></div>
+        <div class="help-cmd"><span class="hcmd">новости технологии</span><span class="hdesc">По категории</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">📅 ЗАДАЧИ</div>
+        <div class="help-cmd"><span class="hcmd">создай задачу X</span><span class="hdesc">Новая задача</span></div>
+        <div class="help-cmd"><span class="hcmd">мои задачи</span><span class="hdesc">Список</span></div>
+        <div class="help-cmd"><span class="hcmd">напомни о X в 18:00</span><span class="hdesc">Напоминание</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">📝 ЗАМЕТКИ</div>
+        <div class="help-cmd"><span class="hcmd">создай заметку</span><span class="hdesc">Новая заметка</span></div>
+        <div class="help-cmd"><span class="hcmd">найди заметку X</span><span class="hdesc">Поиск по тексту</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">🎯 ПРОДУКТИВНОСТЬ</div>
+        <div class="help-cmd"><span class="hcmd">канбан</span><span class="hdesc">Открыть доску</span></div>
+        <div class="help-cmd"><span class="hcmd">матрица</span><span class="hdesc">Эйзенхауэр</span></div>
+        <div class="help-cmd"><span class="hcmd">фокус-режим</span><span class="hdesc">Блок отвлечений</span></div>
+        <div class="help-cmd"><span class="hcmd">привычки</span><span class="hdesc">Чек-лист</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">🛡 СИСТЕМА</div>
+        <div class="help-cmd"><span class="hcmd">статус</span><span class="hdesc">Статус всех агентов</span></div>
+        <div class="help-cmd"><span class="hcmd">смени сервер</span><span class="hdesc">Сменить VPS</span></div>
+        <div class="help-cmd"><span class="hcmd">мой ip</span><span class="hdesc">Внешний IP</span></div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">⌨ ГОРЯЧИЕ КЛАВИШИ</div>
+        <div class="help-cmd"><span class="hcmd">↑ / ↓</span><span class="hdesc">История команд</span></div>
+        <div class="help-cmd"><span class="hcmd">Enter</span><span class="hdesc">Отправить</span></div>
+        <div class="help-cmd"><span class="hcmd">Esc</span><span class="hdesc">Закрыть окно</span></div>
+        <div class="help-cmd"><span class="hcmd">Ctrl+L</span><span class="hdesc">Очистить лог</span></div>
+        <div class="help-cmd"><span class="hcmd">Ctrl+R</span><span class="hdesc">Сбросить контекст</span></div>
+      </div>
+    </div>
+    <div class="help-footer">
+      Сиен 3.0.0 · WebSocket · Локальные команды · Esc или клик вне окна — закрыть
+    </div>
+  </div>
+</div>
+
+<script src="nav_commands.js"></script>
+<script src="local_commands.js"></script>
+<script src="main.js"></script>
+
+<!-- PWA Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/static/service-worker.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
