@@ -448,6 +448,25 @@ body::before {
   animation: slide-in 0.3s ease;
   font-size: 13px;
   word-break: break-word;
+  position: relative;
+  padding-right: 36px;
+}
+.toast-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+  border-radius: 4px;
+}
+.toast-close:hover {
+  background: var(--cyan-dim);
+  color: var(--bg);
 }
 .toast.success { border-left-color: var(--green); }
 .toast.error   { border-left-color: var(--red); }
@@ -1011,11 +1030,22 @@ function toast(title, message, type) {
   el.innerHTML = `
     <div class="toast-title">${escapeHTML(title)}</div>
     <div>${escapeHTML(message || '')}</div>
+    <button class="toast-close" title="Закрыть">✕</button>
   `;
-  container.appendChild(el);
-  setTimeout(() => {
+  
+  // Кнопка закрытия
+  const closeBtn = el.querySelector('.toast-close');
+  closeBtn.addEventListener('click', () => {
     el.style.animation = 'slide-in 0.3s ease reverse';
     setTimeout(() => el.remove(), 280);
+  });
+  
+  container.appendChild(el);
+  setTimeout(() => {
+    if (el.parentNode) {
+      el.style.animation = 'slide-in 0.3s ease reverse';
+      setTimeout(() => el.remove(), 280);
+    }
   }, 4000);
 }
 
