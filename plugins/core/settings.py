@@ -43,6 +43,7 @@ DEFAULTS: dict[str, Any] = {
         "model": "llama3.2:3b",
         "temperature": 0.2,
         "timeout_sec": 30,
+        "qwen_model": "qwen2.5:7b",
     },
     "assistant": {
         "name": "Сиен",

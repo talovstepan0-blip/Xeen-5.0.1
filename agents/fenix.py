@@ -26,6 +26,7 @@ logging.basicConfig(level=logging.INFO, format="[ФЕНИКС] %(message)s")
 
 OLLAMA_URL = "http://localhost:11434"
 OLLAMA_MODEL = "llama3.2:3b"
+QWEN_MODEL = "qwen2.5:7b"
 
 _cache = LLMCache(default_ttl=3600)  # 1 час для intent-парсинга
 
@@ -267,6 +268,7 @@ async def health():
     return {
         "agent": "Феникс", "alive": True,
         "ollama": ollama_ok, "model": OLLAMA_MODEL,
+        "qwen_model": QWEN_MODEL,
         "cache": _cache.stats(),
     }
 
