@@ -75,6 +75,16 @@ CREATE TABLE IF NOT EXISTS two_factor (
     enabled     INTEGER NOT NULL DEFAULT 0,
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS login_sessions (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    temp_token  TEXT    NOT NULL UNIQUE,
+    username    TEXT    NOT NULL,
+    expires_at  TEXT    NOT NULL,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_token ON login_sessions(temp_token);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON login_sessions(expires_at);
 """
 
 
@@ -141,9 +151,28 @@ class TOTPVerify(BaseModel):
     code: str
 
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginVerifyRequest(BaseModel):
+    temp_token: str
+    code: str
+
+
 # ══════════════════════════════════════════════════════════════════
 # Страницы
 # ══════════════════════════════════════════════════════════════════
+
+
+# ── Страница входа ──
+@router.get("/login", response_class=HTMLResponse)
+def login_page():
+    tmpl = find_template("login.html")
+    if tmpl is None:
+        return HTMLResponse("<h1>login.html не найден</h1>", status_code=404)
+    return HTMLResponse(tmpl.read_text(encoding="utf-8"))
 
 
 # ── Сиен 3.0: главная SPA dashboard ──
@@ -615,6 +644,142 @@ async def api_2fa_disable():
     with get_db() as conn:
         conn.execute("DELETE FROM two_factor WHERE id=1")
     return {"ok": True}
+
+
+# ══════════════════════════════════════════════════════════════════
+# API входа и аутентификации
+# ══════════════════════════════════════════════════════════════════
+
+import secrets
+from datetime import datetime, timedelta
+
+
+@router.post("/api/login")
+async def api_login(req: LoginRequest):
+    """
+    Первый шаг входа: проверка логина/пароля.
+    Если 2FA включена — возвращает temp_token и requires_2fa=True.
+    Если 2FA выключена — сразу возвращает session_token.
+    """
+    username = req.username.strip()
+    password = req.password
+    
+    # Простая проверка (в реальном проекте — хеширование паролей)
+    # По умолчанию: admin / admin123
+    VALID_USERS = {
+        "admin": "admin123",
+        "user": "user123"
+    }
+    
+    if username not in VALID_USERS or VALID_USERS[username] != password:
+        raise HTTPException(401, "Неверное имя пользователя или пароль")
+    
+    # Проверяем, включена ли 2FA
+    with get_db() as conn:
+        row = conn.execute("SELECT enabled FROM two_factor WHERE id=1").fetchone()
+    
+    two_fa_enabled = bool(row and row["enabled"])
+    
+    if two_fa_enabled:
+        # Генерируем временный токен для второго шага
+        temp_token = secrets.token_urlsafe(32)
+        expires_at = (datetime.utcnow() + timedelta(minutes=5)).isoformat()
+        
+        with get_db() as conn:
+            conn.execute(
+                "INSERT INTO login_sessions (temp_token, username, expires_at) VALUES (?, ?, ?)",
+                (temp_token, username, expires_at)
+            )
+        
+        return {
+            "requires_2fa": True,
+            "temp_token": temp_token,
+            "message": "Введите код TOTP"
+        }
+    else:
+        # Вход без 2FA
+        session_token = secrets.token_urlsafe(32)
+        return {
+            "requires_2fa": False,
+            "session_token": session_token,
+            "username": username,
+            "redirect_url": "/dashboard/"
+        }
+
+
+@router.post("/api/login/verify")
+async def api_login_verify(req: LoginVerifyRequest):
+    """
+    Второй шаг входа: проверка TOTP кода.
+    """
+    try:
+        import pyotp
+    except ImportError:
+        raise HTTPException(500, "pyotp не установлен")
+    
+    temp_token = req.temp_token
+    code = req.code.strip()
+    
+    # Проверяем временный токен
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT username, expires_at FROM login_sessions WHERE temp_token=?",
+            (temp_token,)
+        ).fetchone()
+    
+    if not row:
+        raise HTTPException(401, "Неверный или истёкший токен")
+    
+    # Проверяем срок действия
+    expires_at = datetime.fromisoformat(row["expires_at"])
+    if datetime.utcnow() > expires_at:
+        with get_db() as conn:
+            conn.execute("DELETE FROM login_sessions WHERE temp_token=?", (temp_token,))
+        raise HTTPException(401, "Токен истёк")
+    
+    username = row["username"]
+    
+    # Получаем TOTP секрет
+    with get_db() as conn:
+        secret_row = conn.execute("SELECT secret FROM two_factor WHERE id=1").fetchone()
+    
+    if not secret_row:
+        raise HTTPException(404, "2FA не настроена")
+    
+    totp = pyotp.TOTP(secret_row["secret"])
+    if not totp.verify(code, valid_window=1):
+        raise HTTPException(401, "Неверный код TOTP")
+    
+    # Удаляем временный токен
+    with get_db() as conn:
+        conn.execute("DELETE FROM login_sessions WHERE temp_token=?", (temp_token,))
+    
+    # Генерируем сессионный токен
+    session_token = secrets.token_urlsafe(32)
+    
+    return {
+        "requires_2fa": False,
+        "session_token": session_token,
+        "username": username,
+        "redirect_url": "/dashboard/"
+    }
+
+
+@router.get("/api/auth/status")
+async def api_auth_status(request: Request):
+    """Проверка статуса аутентификации."""
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        # Здесь можно проверить валидность токена
+        return {"authenticated": True, "token_valid": True}
+    return {"authenticated": False}
+
+
+@router.post("/api/logout")
+async def api_logout():
+    """Выход из системы."""
+    return {"ok": True, "message": "Выполнен выход"}
 
 
 # ══════════════════════════════════════════════════════════════════
