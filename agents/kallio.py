@@ -1,16 +1,15 @@
 """
+Агент 'Каллио' (Медиум) — рекомендации фильмов, книг, игр.
+Этап 4 проекта 'Сиен 01'.
+
+SQLite для истории предпочтений + LLM рекомендации + заглушки Kinopoisk/IMDb API.
+"""
 
 # ── Сиен 3.0.0 patch: абсолютные пути ──
 from pathlib import Path as _WenPath
 _BASE_DIR = _WenPath(__file__).resolve().parent.parent
 _DATA_DIR = _BASE_DIR / "data"
 _DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-Агент 'Каллио' (Медиум) — рекомендации фильмов, книг, игр.
-Этап 4 проекта 'Сиен 01'.
-
-SQLite для истории предпочтений + LLM рекомендации + заглушки Kinopoisk/IMDb API.
-"""
 
 import os, sqlite3, logging, json
 from typing import Optional
