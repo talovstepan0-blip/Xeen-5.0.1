@@ -1,11 +1,4 @@
 """
-
-# ── Сиен 3.0.0 patch: абсолютные пути ──
-from pathlib import Path as _WenPath
-_BASE_DIR = _WenPath(__file__).resolve().parent.parent
-_DATA_DIR = _BASE_DIR / "data"
-_DATA_DIR.mkdir(parents=True, exist_ok=True)
-
 Агент 'Авто' (Макросы) — запись и воспроизведение действий мыши/клавиатуры.
 Этап 4 проекта 'Сиен 01'.
 
@@ -13,6 +6,12 @@ _DATA_DIR.mkdir(parents=True, exist_ok=True)
 На сервере используй заглушку-режим (AVTO_HEADLESS=1).
 Установи: pip install pynput
 """
+
+# ── Сиен 3.0.0 patch: абсолютные пути ──
+from pathlib import Path as _WenPath
+_BASE_DIR = _WenPath(__file__).resolve().parent.parent
+_DATA_DIR = _BASE_DIR / "data"
+_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 import os, sqlite3, logging, json, threading, time
 from typing import Optional

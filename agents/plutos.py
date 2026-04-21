@@ -1,16 +1,15 @@
 """
+Агент 'Плутос' (Инвестор) — анализ рынков, котировки, paper trading.
+Этап 4 проекта 'Сиен 01'.
+
+Интеграции: yfinance (акции), ccxt (крипто), Дике (бухгалтер).
+"""
 
 # ── Сиен 3.0.0 patch: абсолютные пути ──
 from pathlib import Path as _WenPath
 _BASE_DIR = _WenPath(__file__).resolve().parent.parent
 _DATA_DIR = _BASE_DIR / "data"
 _DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-Агент 'Плутос' (Инвестор) — анализ рынков, котировки, paper trading.
-Этап 4 проекта 'Сиен 01'.
-
-Интеграции: yfinance (акции), ccxt (крипто), Дике (бухгалтер).
-"""
 
 import os, sqlite3, logging, json
 from datetime import datetime

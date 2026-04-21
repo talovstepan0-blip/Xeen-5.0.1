@@ -1,16 +1,15 @@
 """
+Агент 'Муса' (Контент) — генерация и публикация постов.
+Этап 4 проекта 'Сиен 01'.
+
+LLM-генерация текста + заглушки публикации в VK, Instagram, Facebook.
+"""
 
 # ── Сиен 3.0.0 patch: абсолютные пути ──
 from pathlib import Path as _WenPath
 _BASE_DIR = _WenPath(__file__).resolve().parent.parent
 _DATA_DIR = _BASE_DIR / "data"
 _DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-Агент 'Муса' (Контент) — генерация и публикация постов.
-Этап 4 проекта 'Сиен 01'.
-
-LLM-генерация текста + заглушки публикации в VK, Instagram, Facebook.
-"""
 
 import os, sqlite3, logging, json
 from datetime import datetime
